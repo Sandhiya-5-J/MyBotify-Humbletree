@@ -1,0 +1,3 @@
+Testing chat stream... conv_id 76b3f37e-0cb2-46fd-b572-3785ce395270
+Connected, status 200
+{"data":{"message":"Sorry, I'm having trouble connecting right now. Please try again in a moment.","conversation_id":"76b3f37e-0cb2-46fd-b572-3785ce395270"},"error":null}

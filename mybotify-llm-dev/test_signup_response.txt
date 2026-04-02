@@ -1,0 +1,4 @@
+Status: 200
+Time: 11.8s
+Headers: {'date': 'Tue, 17 Mar 2026 12:07:49 GMT', 'server': 'uvicorn', 'content-length': '227', 'content-type': 'application/json'}
+Body: {"data":{"message":"✅ Account created successfully! Name: Test User, Email: testuser_98dc70@example.com. The user can now log in with their credentials.","conversation_id":"a8e14588-4266-4f21-9206-72fa4e3c380b"},"error":null}

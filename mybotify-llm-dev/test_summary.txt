@@ -1,0 +1,32 @@
+============================================================
+TEST 1: Signup via AI chat
+============================================================
+Traceback (most recent call last):
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\test_api.py", line 10, in <module>
+    r = requests.post('http://localhost:8000/api/chat/conversation', json={
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\requests\adapters.py", line 644, in send
+    resp = conn.urlopen(
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\venv\lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\NIRANJAN S\AppData\Local\Programs\Python\Python310\lib\http\client.py", line 1368, in getresponse
+    response.begin()
+  File "C:\Users\NIRANJAN S\AppData\Local\Programs\Python\Python310\lib\http\client.py", line 317, in begin
+    version, status, reason = self._read_status()
+  File "C:\Users\NIRANJAN S\AppData\Local\Programs\Python\Python310\lib\http\client.py", line 278, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "C:\Users\NIRANJAN S\AppData\Local\Programs\Python\Python310\lib\socket.py", line 705, in readinto
+    return self._sock.recv_into(b)
+KeyboardInterrupt
+^C

@@ -1,0 +1,12 @@
+Last 5 registered users:
+------------------------------------------------------------
+ID: 29 | Name: 'Test User Login' | Email: 'test_login_x1@example.com'
+------------------------------------------------------------
+ID: 28 | Name: 'Test User' | Email: 'test@example.com'
+------------------------------------------------------------
+ID: 27 | Name: 'Test User' | Email: 'testuser_98dc70@example.com'
+------------------------------------------------------------
+ID: 26 | Name: 'Test User' | Email: 'testuser_efe68b@example.com'
+------------------------------------------------------------
+ID: 25 | Name: 'Test User' | Email: 'testuser_6c5913@example.com'
+------------------------------------------------------------

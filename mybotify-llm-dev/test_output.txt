@@ -1,0 +1,545 @@
+﻿venv\Scripts\python : 
+Traceback (most recent 
+call last):
+At line:1 char:1
++ venv\Scripts\python 
+test_chat.py 2>&1 | 
+Out-File -FilePath 
+test_outpu ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Traceback (mo   
+ st recent call las    
+t)::String) [], Re    
+moteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_google_genai\
+chat_models.py", line 
+3088, in _agenerate
+    await self.client.a
+io.models.generate_cont
+ent(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\models.py"
+, line 7331, in 
+generate_content
+    response = await 
+self._generate_content(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\models.py"
+, line 6095, in 
+_generate_content
+    response = await se
+lf._api_client.async_re
+quest(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\_api_clien
+t.py", line 1442, in 
+async_request
+    result = await 
+self._async_request(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\_api_clien
+t.py", line 1374, in 
+_async_request
+    return await retry(
+self._async_request_onc
+e, http_request, 
+stream)  # type: 
+ignore[no-any-return]
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\asyncio\__init
+__.py", line 112, in 
+__call__
+    do = await self.ite
+r(retry_state=retry_sta
+te)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\asyncio\__init
+__.py", line 157, in 
+iter
+    result = await 
+action(retry_state)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\_utils.py", 
+line 111, in inner
+    return call(*args, 
+**kwargs)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\__init__.py", 
+line 413, in exc_check
+    raise 
+retry_exc.reraise()
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\__init__.py", 
+line 184, in reraise
+    raise self.last_att
+empt.result()
+  File 
+"C:\Users\NIRANJAN S\Ap
+pData\Local\Programs\Py
+thon\Python310\lib\conc
+urrent\futures\_base.py
+", line 438, in result
+    return 
+self.__get_result()
+  File 
+"C:\Users\NIRANJAN S\Ap
+pData\Local\Programs\Py
+thon\Python310\lib\conc
+urrent\futures\_base.py
+", line 390, in 
+__get_result
+    raise 
+self._exception
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+tenacity\asyncio\__init
+__.py", line 116, in 
+__call__
+    result = await 
+fn(*args, **kwargs)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\_api_clien
+t.py", line 1320, in 
+_async_request_once
+    await errors.APIErr
+or.raise_for_async_resp
+onse(response)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\errors.py"
+, line 216, in raise_fo
+r_async_response
+    await cls.raise_err
+or_async(status_code, 
+response_json, 
+response)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+google\genai\errors.py"
+, line 238, in 
+raise_error_async
+    raise ClientError(s
+tatus_code, 
+response_json, 
+response)
+google.genai.errors.Cli
+entError: 429 
+RESOURCE_EXHAUSTED. 
+{'error': {'code': 
+429, 'message': 'You 
+exceeded your current 
+quota, please check 
+your plan and billing 
+details. For more 
+information on this 
+error, head to: https:/
+/ai.google.dev/gemini-a
+pi/docs/rate-limits. 
+To monitor your 
+current usage, head 
+to: https://ai.dev/rate
+-limit. \n* Quota 
+exceeded for metric: ge
+nerativelanguage.google
+apis.com/generate_conte
+nt_free_tier_input_toke
+n_count, limit: 0, 
+model: 
+gemini-2.0-flash\n* 
+Quota exceeded for 
+metric: generativelangu
+age.googleapis.com/gene
+rate_content_free_tier_
+requests, limit: 0, 
+model: 
+gemini-2.0-flash\n* 
+Quota exceeded for 
+metric: generativelangu
+age.googleapis.com/gene
+rate_content_free_tier_
+requests, limit: 0, 
+model: gemini-2.0-flash
+\nPlease retry in 
+2.295960892s.', 
+'status': 
+'RESOURCE_EXHAUSTED', 
+'details': [{'@type': '
+type.googleapis.com/goo
+gle.rpc.Help', 
+'links': 
+[{'description': 
+'Learn more about 
+Gemini API quotas', 
+'url': 'https://ai.goog
+le.dev/gemini-api/docs/
+rate-limits'}]}, 
+{'@type': 'type.googlea
+pis.com/google.rpc.Quot
+aFailure', 
+'violations': 
+[{'quotaMetric': 'gener
+ativelanguage.googleapi
+s.com/generate_content_
+free_tier_input_token_c
+ount', 'quotaId': 'Gene
+rateContentInputTokensP
+erModelPerMinute-FreeTi
+er', 
+'quotaDimensions': 
+{'location': 'global', 
+'model': 
+'gemini-2.0-flash'}}, 
+{'quotaMetric': 'genera
+tivelanguage.googleapis
+.com/generate_content_f
+ree_tier_requests', 
+'quotaId': 'GenerateReq
+uestsPerMinutePerProjec
+tPerModel-FreeTier', 
+'quotaDimensions': 
+{'model': 
+'gemini-2.0-flash', 
+'location': 
+'global'}}, 
+{'quotaMetric': 'genera
+tivelanguage.googleapis
+.com/generate_content_f
+ree_tier_requests', 
+'quotaId': 'GenerateReq
+uestsPerDayPerProjectPe
+rModel-FreeTier', 
+'quotaDimensions': 
+{'location': 'global', 
+'model': 'gemini-2.0-fl
+ash'}}]}, {'@type': 'ty
+pe.googleapis.com/googl
+e.rpc.RetryInfo', 
+'retryDelay': '2s'}]}}
+
+The above exception 
+was the direct cause 
+of the following 
+exception:
+
+Traceback (most recent 
+call last):
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+test_chat.py", line 
+22, in 
+test_llm_directly
+    res = await 
+model.ainvoke('Hello, 
+say just one word 
+back.')
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_core\language
+_models\chat_models.py"
+, line 425, in ainvoke
+    llm_result = await 
+self.agenerate_prompt(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_core\language
+_models\chat_models.py"
+, line 1132, in 
+agenerate_prompt
+    return await 
+self.agenerate(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_core\language
+_models\chat_models.py"
+, line 1090, in 
+agenerate
+    raise exceptions[0]
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_core\language
+_models\chat_models.py"
+, line 1359, in 
+_agenerate_with_cache
+    result = await 
+self._agenerate(
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_google_genai\
+chat_models.py", line 
+3093, in _agenerate
+    _handle_client_erro
+r(e, request)
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+venv\lib\site-packages\
+langchain_google_genai\
+chat_models.py", line 
+145, in 
+_handle_client_error
+    raise ChatGoogleGen
+erativeAIError(msg) 
+from e
+langchain_google_genai.
+chat_models.ChatGoogleG
+enerativeAIError: 
+Error calling model 
+'gemini-2.0-flash' 
+(RESOURCE_EXHAUSTED): 
+429 
+RESOURCE_EXHAUSTED. 
+{'error': {'code': 
+429, 'message': 'You 
+exceeded your current 
+quota, please check 
+your plan and billing 
+details. For more 
+information on this 
+error, head to: https:/
+/ai.google.dev/gemini-a
+pi/docs/rate-limits. 
+To monitor your 
+current usage, head 
+to: https://ai.dev/rate
+-limit. \n* Quota 
+exceeded for metric: ge
+nerativelanguage.google
+apis.com/generate_conte
+nt_free_tier_input_toke
+n_count, limit: 0, 
+model: 
+gemini-2.0-flash\n* 
+Quota exceeded for 
+metric: generativelangu
+age.googleapis.com/gene
+rate_content_free_tier_
+requests, limit: 0, 
+model: 
+gemini-2.0-flash\n* 
+Quota exceeded for 
+metric: generativelangu
+age.googleapis.com/gene
+rate_content_free_tier_
+requests, limit: 0, 
+model: gemini-2.0-flash
+\nPlease retry in 
+2.295960892s.', 
+'status': 
+'RESOURCE_EXHAUSTED', 
+'details': [{'@type': '
+type.googleapis.com/goo
+gle.rpc.Help', 
+'links': 
+[{'description': 
+'Learn more about 
+Gemini API quotas', 
+'url': 'https://ai.goog
+le.dev/gemini-api/docs/
+rate-limits'}]}, 
+{'@type': 'type.googlea
+pis.com/google.rpc.Quot
+aFailure', 
+'violations': 
+[{'quotaMetric': 'gener
+ativelanguage.googleapi
+s.com/generate_content_
+free_tier_input_token_c
+ount', 'quotaId': 'Gene
+rateContentInputTokensP
+erModelPerMinute-FreeTi
+er', 
+'quotaDimensions': 
+{'location': 'global', 
+'model': 
+'gemini-2.0-flash'}}, 
+{'quotaMetric': 'genera
+tivelanguage.googleapis
+.com/generate_content_f
+ree_tier_requests', 
+'quotaId': 'GenerateReq
+uestsPerMinutePerProjec
+tPerModel-FreeTier', 
+'quotaDimensions': 
+{'model': 
+'gemini-2.0-flash', 
+'location': 
+'global'}}, 
+{'quotaMetric': 'genera
+tivelanguage.googleapis
+.com/generate_content_f
+ree_tier_requests', 
+'quotaId': 'GenerateReq
+uestsPerDayPerProjectPe
+rModel-FreeTier', 
+'quotaDimensions': 
+{'location': 'global', 
+'model': 'gemini-2.0-fl
+ash'}}]}, {'@type': 'ty
+pe.googleapis.com/googl
+e.rpc.RetryInfo', 
+'retryDelay': '2s'}]}}
+C:\Users\NIRANJAN S\One
+Drive\Desktop\Mybotify-
+Main\mybotify-llm-dev\t
+est_chat.py:94: 
+DeprecationWarning: 
+There is no current 
+event loop
+  loop.run_until_comple
+te(asyncio.gather(*pend
+ing, return_exceptions=
+True))
+============================================================
+TEST 1: Direct LLM call (no LangGraph)
+============================================================
+  Provider: google_genai
+  Model:    gemini-2.0-flash
+  API Key:  AIzaSyCeT9...
+  FAILED: ChatGoogleGenerativeAIError: Error calling model 'gemini-2.0-flash' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\nPlease retry in 2.295960892s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-2.0-flash', 'location': 'global'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '2s'}]}}
+
+>>> LLM itself is broken. Fix your API key / provider first!
+Traceback (most recent 
+call last):
+  File 
+"C:\Users\NIRANJAN S\On
+eDrive\Desktop\Mybotify
+-Main\mybotify-llm-dev\
+test_chat.py", line 
+94, in <module>
+    loop.run_until_comp
+lete(asyncio.gather(*pe
+nding, return_exception
+s=True))
+  File 
+"C:\Users\NIRANJAN S\Ap
+pData\Local\Programs\Py
+thon\Python310\lib\asyn
+cio\base_events.py", 
+line 620, in 
+run_until_complete
+    future = tasks.ensu
+re_future(future, 
+loop=self)
+  File 
+"C:\Users\NIRANJAN S\Ap
+pData\Local\Programs\Py
+thon\Python310\lib\asyn
+cio\tasks.py", line 
+619, in ensure_future
+    return _ensure_futu
+re(coro_or_future, 
+loop=loop)
+  File 
+"C:\Users\NIRANJAN S\Ap
+pData\Local\Programs\Py
+thon\Python310\lib\asyn
+cio\tasks.py", line 
+625, in _ensure_future
+    raise 
+ValueError('The future 
+belongs to a different 
+loop than '
+ValueError: The future 
+belongs to a different 
+loop than the one 
+specified as the loop 
+argument
+Task was destroyed but 
+it is pending!
+task: <Task pending 
+name='Task-15' coro=<_w
+ait_for_close() 
+running at 
+C:\Users\NIRANJAN S\One
+Drive\Desktop\Mybotify-
+Main\mybotify-llm-dev\v
+env\lib\site-packages\a
+iohttp\connector.py:136
+>>
+C:\Users\NIRANJAN S\App
+Data\Local\Programs\Pyt
+hon\Python310\lib\async
+io\base_events.py:666: 
+RuntimeWarning: 
+coroutine 
+'_wait_for_close' was 
+never awaited

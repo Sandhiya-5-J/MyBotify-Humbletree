@@ -1,0 +1,95 @@
+# Byte-compiled / optimized / compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pipenv and Poetry
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# pyenv
+.python-version
+
+# Pyre type checker
+.pyre/
+
+# mypy type checker
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# Other editors
+*.swp
+*.swo
+*.swn
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+*.log.*
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Build files
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# Sphinx documentation
+docs/_build/
+
+# PyInstaller
+*.spec
+
+# Docker
+*.env
+docker-compose.override.yml
+
+# Environment-specific
+*.local
+
+# System files
+.vscode/
+.env

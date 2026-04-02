@@ -1,0 +1,42 @@
+============================================================
+TEST 1: Direct LLM call (no LangGraph)
+============================================================
+  Provider: groq
+  Model:    llama-3.1-8b-instant
+  API Key:  gsk_vjHJlO...
+  SUCCESS: Hello.
+
+============================================================
+TEST 3: Full LangGraph ainvoke
+============================================================
+  Invoking graph...
+  [Planner]: {'next_agent': 'Account'}
+2026-03-17 15:25:41,330 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-03-17 15:25:41,330 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-03-17 15:25:41,331 INFO sqlalchemy.engine.Engine select current_schema()
+2026-03-17 15:25:41,331 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-03-17 15:25:41,332 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-03-17 15:25:41,332 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-03-17 15:25:41,332 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-03-17 15:25:41,334 INFO sqlalchemy.engine.Engine SELECT users.id AS users_id, users.name AS users_name, users.role AS users_role, users.email AS users_email, users.phone_number AS users_phone_number, users.is_active AS users_is_active, users.hashed_password AS users_hashed_password, users.email_verification AS users_email_verification, users.phone_number_verification AS users_phone_number_verification, users.reset_password_code AS users_reset_password_code, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.email = %(email_1)s 
+ LIMIT %(param_1)s
+2026-03-17 15:25:41,334 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {'email_1': 'john@test.com', 'param_1': 1}
+2026-03-17 15:25:41,545 INFO sqlalchemy.engine.Engine INSERT INTO users (name, role, email, phone_number, is_active, hashed_password, email_verification, phone_number_verification, reset_password_code, created_at, updated_at) VALUES (%(name)s, %(role)s, %(email)s, %(phone_number)s, %(is_active)s, %(hashed_password)s, %(email_verification)s, %(phone_number_verification)s, %(reset_password_code)s, %(created_at)s, %(updated_at)s) RETURNING users.id
+2026-03-17 15:25:41,546 INFO sqlalchemy.engine.Engine [generated in 0.00026s] {'name': 'John', 'role': 'USER', 'email': 'john@test.com', 'phone_number': None, 'is_active': True, 'hashed_password': '$2b$12$5bxUjQ5IpUb0SLXk2KVL/OtqxLpzT.Nxy3Y4NGuMjUl6a8v7bweEK', 'email_verification': None, 'phone_number_verification': None, 'reset_password_code': None, 'created_at': datetime.datetime(2026, 3, 17, 9, 55, 36, 246664, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 3, 17, 9, 55, 36, 246664, tzinfo=datetime.timezone.utc)}
+2026-03-17 15:25:41,546 INFO sqlalchemy.engine.Engine COMMIT
+2026-03-17 15:25:41,548 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-03-17 15:25:41,549 INFO sqlalchemy.engine.Engine SELECT users.id, users.name, users.role, users.email, users.phone_number, users.is_active, users.hashed_password, users.email_verification, users.phone_number_verification, users.reset_password_code, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = %(pk_1)s
+2026-03-17 15:25:41,549 INFO sqlalchemy.engine.Engine [generated in 0.00011s] {'pk_1': 21}
+Traceback (most recent call last):
+  File "C:\Users\NIRANJAN S\OneDrive\Desktop\Mybotify-Main\mybotify-llm-dev\test_chat.py", line 63, in test_graph_invoke
+    print(f"  [{key}]: {value}")
+  File "C:\Users\NIRANJAN S\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 61: character maps to <undefined>
+  FAILED: UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 61: character maps to <undefined>
+
+Done.

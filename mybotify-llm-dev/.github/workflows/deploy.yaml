@@ -1,0 +1,36 @@
+name: Docker Image Builder
+on:
+  push:
+    branches:
+      - dev
+      - master
+      - main
+      - workflow_dispatch
+env:
+  ELASTIC_BEANSTALK_NAME: mybotify
+  ELASTIC_BEANSTALK_ENV_NAME: Mybotify-v1-dev
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      name: clone repo
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    - name: Install Dep
+      run: pip install -r requirements.txt
+    - name: Zip
+      run: zip -r ./${{github.run_id}}.zip .
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-east-1
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Upload artifact to s3
+      run: aws s3 cp ./${{github.run_id}}.zip s3://elasticbeanstalk-us-east-1-${{ secrets.AWS_ACCOUNT_ID }}/artifact/mybotify/
+    - name: Deploy
+      run: |
+        aws elasticbeanstalk create-application-version --application-name $ELASTIC_BEANSTALK_NAME --version-label ${{github.run_id}} --description ${{github.run_id}} --source-bundle S3Bucket="elasticbeanstalk-us-east-1-${{ secrets.AWS_ACCOUNT_ID }}",S3Key="artifact/mybotify/${{github.run_id}}.zip"
+        aws elasticbeanstalk update-environment --application-name $ELASTIC_BEANSTALK_NAME --environment-name $ELASTIC_BEANSTALK_ENV_NAME --version-label ${{github.run_id}}
