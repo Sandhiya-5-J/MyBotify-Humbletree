@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { FaHandshake } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { useRouter } from "next/navigation";
-import { isAuthenticated, getUserRole } from "@/lib/auth";
 import { useForm, Controller } from "react-hook-form";
 
 import Select from "react-select";
@@ -41,17 +40,6 @@ export default function SignUp() {
   const selectedCountry = watch("countryCode", countryOptions[0]);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      const role = getUserRole();
-      if (role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/account");
-      }
-    }
-  }, [router]);
 
   // Phone validation based on country
   const getPhoneValidation = () => {
@@ -98,7 +86,7 @@ export default function SignUp() {
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // Start loading
 
     const payload = {
       name: value.name,
@@ -108,24 +96,17 @@ export default function SignUp() {
     };
 
     try {
-      const response = await registerUser(payload);
+      await registerUser(payload);
       setEmail(value.email);
-
-      // null or undefined means auto-verified (dev mode) — skip OTP, open login
-      if (response?.email_verification == null) {
-        alert("Account created successfully! Please log in.");
-        setIsModalOpen(true);
-      } else {
-        // Production: OTP sent to email, show OTP popup
-        setIsOtp(true);
-      }
+      setIsOtp(true);
     } catch (error: any) {
       console.error(error);
       const errorMessage =
-        error?.message || "Something went wrong. Please try again.";
+        error?.response?.data?.detail ||
+        "Something went wrong. Please try again.";
       alert(errorMessage);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading
     }
   };
 

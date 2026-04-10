@@ -5,13 +5,42 @@ import { SetStateAction, useState, useEffect, JSX } from "react";
 import { FaSearch, FaFacebook, FaInstagram } from "react-icons/fa";
 import { MdAdd } from "react-icons/md";
 import { SiGoogleads } from "react-icons/si";
-
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
+import { getMyStores } from "@/api/store";
+import { getStoreCampaigns } from "@/api/campaign";
 
 type AddAccountProps = {
   onClickTab: (tab: string) => void;
-  onClickInfo: (info: string, domainName: string) => void;
+  onClickInfo: (info: string, domainName: string, storeId?: number) => void;
   domain: string;
+};
+
+type Campaign = {
+  id: number;
+  name: string;
+  platform: string;
+  status: string;
+};
+
+type StoreWithCampaigns = {
+  id: number;
+  store_name: string;
+  store_url: string;
+  is_active: boolean;
+  campaigns: Campaign[];
+};
+
+const getPlatformIcon = (platform: string) => {
+  switch (platform) {
+    case "Facebook":
+      return <FaFacebook className="text-[#1877F2]" />;
+    case "Instagram":
+      return <FaInstagram className="text-[#E4405F]" />;
+    case "Google Ads":
+      return <SiGoogleads className="text-green-600" />;
+    default:
+      return null;
+  }
 };
 
 export default function ContentDomain({
@@ -20,78 +49,54 @@ export default function ContentDomain({
   domain,
 }: AddAccountProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [stores, setStores] = useState<StoreWithCampaigns[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  type Campaign = {
-    id: number;
-    name: string;
-    status: string;
-    icon: JSX.Element;
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const myStores = await getMyStores();
+        if (myStores) {
+          const storesWithCampaigns = await Promise.all(
+            myStores.map(async (store: any) => {
+              const campaigns = await getStoreCampaigns(store.id);
+              return {
+                id: store.id,
+                store_name: store.store_name,
+                store_url: store.store_url || store.store_name,
+                is_active: store.is_active,
+                campaigns: (campaigns || []).map((c: any) => ({
+                  id: c.id,
+                  name: c.name,
+                  platform: c.platform,
+                  status: c.status,
+                })),
+              };
+            })
+          );
+          setStores(storesWithCampaigns);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  type Account = {
-    id: number;
-    info: string;
-    status: string;
-    campagin: Campaign[];
-  };
-
-  const accounts: Account[] = [
-    {
-      id: 1,
-      info: "cassuals.com",
-      status: "Active",
-      campagin: [
-        { id: 1, name: "facebook", status: "Active", icon: <FaFacebook /> },
-        { id: 2, name: "Instagram", status: "Inactive", icon: <FaInstagram /> },
-        { id: 3, name: "Google Ad", status: "Active", icon: <SiGoogleads /> },
-      ],
-    },
-    {
-      id: 2,
-      info: "kellyislands.com",
-      status: "Inactive",
-      campagin: [
-        { id: 1, name: "facebook", status: "Active", icon: <FaFacebook /> },
-        { id: 2, name: "Instagram", status: "Active", icon: <FaInstagram /> },
-        { id: 3, name: "Google Ad", status: "Inactive", icon: <SiGoogleads /> },
-      ],
-    },
-    {
-      id: 3,
-      info: "averyverylongaccountname.com",
-      status: "Active",
-      campagin: [],
-    },
-    {
-      id: 4,
-      info: "johndoe.com",
-      status: "Inactive",
-      campagin: [
-        { id: 1, name: "facebook", status: "Inactive", icon: <FaFacebook /> },
-        { id: 2, name: "Instagram", status: "Active", icon: <FaInstagram /> },
-        { id: 3, name: "Google Ad", status: "Inactive", icon: <SiGoogleads /> },
-      ],
-    },
-  ];
-  const filteredAccounts = accounts.filter((data) =>
-    data.info.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredStores = stores.filter((s) =>
+    (s.store_url || s.store_name).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const rowsPerPage = 7;
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState(accounts);
 
-  // Calculate the total number of pages
-  const totalPages = Math.ceil(filteredAccounts.length / rowsPerPage);
-
-  // Get the rows for the current page
+  const totalPages = Math.max(1, Math.ceil(filteredStores.length / rowsPerPage));
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const currentRows = filteredAccounts.slice(
-    startIndex,
-    startIndex + rowsPerPage
-  );
+  const currentRows = filteredStores.slice(startIndex, startIndex + rowsPerPage);
 
-  // Pagination handler
   const handlePageChange = (page: SetStateAction<number>) => {
     if (typeof page === "number" && page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -100,12 +105,18 @@ export default function ContentDomain({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, data]);
+  }, [searchQuery]);
 
-  const handleDeleteAccount = (id: number) => {
-    const updatedData = data.filter((account) => account.id !== id);
-    setData(updatedData);
-  };
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <svg className="animate-spin h-8 w-8 text-[#2e3e48]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full flex flex-col">
@@ -130,7 +141,7 @@ export default function ContentDomain({
       </div>
       <div>
         <h1 className="text-[#2e3e48] text-xl font-sans font-bold pt-2 px-2">
-          {domain}
+          {domain || "My Stores"}
         </h1>
       </div>
 
@@ -174,82 +185,51 @@ export default function ContentDomain({
 
         {/* Table Rows */}
         {currentRows.length > 0 ? (
-          currentRows.map((account, index) => (
-            <div key={index} className="pb-4">
+          currentRows.map((store) => (
+            <div key={store.id} className="pb-4">
               <div className="bg-white w-full h-10 flex flex-row items-center">
-                {/* Account Info */}
+                {/* Domain Info */}
                 <div className="w-1/3 px-4 truncate">
                   <h1
-                    onClick={() => onClickInfo("info", account.info)}
-                    className="text-[#2e3e48] font-sans text-sm font-medium cursor-pointer"
-                    title={account.info}
+                    onClick={() => onClickInfo("info", store.store_url || store.store_name, store.id)}
+                    className="text-[#2e3e48] font-sans text-sm font-medium cursor-pointer hover:underline"
+                    title={store.store_url || store.store_name}
                   >
-                    {account.info}
+                    {store.store_url || store.store_name}
                   </h1>
                 </div>
 
-                {/* Account Status */}
+                {/* Status */}
                 <div className="w-1/3 px-4 flex justify-center items-center">
                   <span
                     className={`px-3 py-1 text-sm font-medium rounded-lg text-[#162120] ${
-                      account.status === "Active"
+                      store.is_active
                         ? "bg-[#8FFF5C] "
                         : "bg-[#E5E5E5] "
                     }`}
                   >
-                    {account.status}
+                    {store.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
 
-                {/* Action */}
+                {/* Campaigns */}
                 <div className="w-1/2 px-4 text-right flex flex-row gap-4 justify-start items-center">
-                  {account.campagin.length > 0 ? (
-                    account.campagin.map(
-                      (campaign: {
-                        id: number;
-                        name: string;
-                        status: string;
-                        icon: JSX.Element;
-                      }) => (
-                        <span
-                          key={campaign.id}
-                          className={`px-2 py-1 gap-1 flex flex-row justify-center items-center text-xs font-medium rounded-2xl  ${
-                            campaign.status === "Active"
-                              ? "bg-white border-2 border-gray-200"
-                              : "bg-[#E5E5E5] "
-                          }  ${
-                            campaign.name === "facebook" &&
-                            campaign.status === "Active"
-                              ? `text-[#1877F2]`
-                              : campaign.name === "Instagram" &&
-                                campaign.status === "Active"
-                              ? `bg-gradient-to-r from-pink-500 to-yellow-500 bg-clip-text text-transparent`
-                              : campaign.name === "Google Ad" &&
-                                campaign.status === "Active"
-                              ? `text-black`
-                              : `text-black`
-                          }`}
-                        >
-                          <div
-                            className={`${
-                              campaign.name === "facebook" &&
-                              campaign.status === "Active"
-                                ? `text-[#1877F2]`
-                                : campaign.name === "Instagram" &&
-                                  campaign.status === "Active"
-                                ? `text-[#E4405F]`
-                                : campaign.name === "Google Ad" &&
-                                  campaign.status === "Active"
-                                ? `text-green-600`
-                                : `text-[black`
-                            } text-sm`}
-                          >
-                            {campaign.icon}
-                          </div>
-                          {campaign.name}
-                        </span>
-                      )
-                    )
+                  {store.campaigns.length > 0 ? (
+                    store.campaigns.map((campaign) => (
+                      <span
+                        key={campaign.id}
+                        className={`px-2 py-1 gap-1 flex flex-row justify-center items-center text-xs font-medium rounded-2xl ${
+                          campaign.status === "Active"
+                            ? "bg-white border-2 border-gray-200"
+                            : "bg-[#E5E5E5]"
+                        }`}
+                      >
+                        <div className="text-sm">
+                          {getPlatformIcon(campaign.platform)}
+                        </div>
+                        {campaign.platform}
+                      </span>
+                    ))
                   ) : (
                     <div className="text-xs text-[#888686]">
                       No Campaign found
@@ -261,7 +241,9 @@ export default function ContentDomain({
           ))
         ) : (
           <div className="py-4 text-center text-sm text-[#2E3E48]">
-            No Domain found
+            {stores.length === 0
+              ? "No stores connected. Please connect a store first."
+              : "No Domain found"}
           </div>
         )}
       </div>
@@ -269,7 +251,7 @@ export default function ContentDomain({
       {/* Pagination */}
       <div className="flex justify-between items-center py-4 px-2">
         <div className=" text-sm font-sans text-[#2e3e48]">
-          Showing {currentRows.length} of {accounts.length} rows
+          Showing {currentRows.length} of {filteredStores.length} rows
         </div>
         <div className="flex items-center">
           <button

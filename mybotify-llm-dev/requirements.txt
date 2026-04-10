@@ -2,7 +2,7 @@ SQLAlchemy==2.0.39
 alembic==1.15.1
 fastapi==0.115.11
 jq==1.8.0
-langchain==0.3.21
+langchain==0.3.27
 langchain-openai==0.3.10
 langgraph-checkpoint-postgres==2.0.19
 langchain-community==0.3.27

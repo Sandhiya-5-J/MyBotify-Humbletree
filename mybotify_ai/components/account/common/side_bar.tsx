@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { MdAccountBalance, MdWeb } from "react-icons/md";
+import { MdAccountBalance, MdWeb, MdCampaign } from "react-icons/md";
 import { IoLogOut } from "react-icons/io5";
 import { IoPerson } from "react-icons/io5";
 import { useRouter } from "next/navigation";
@@ -59,6 +59,17 @@ export default function SideBar({ activeTab, onClickTab }: SideBarProps) {
                 <MdWeb />
               </div>
               <span>Website</span>
+            </Link>
+          </div>
+          <div className="w-[90%] h-10">
+            <Link
+              href={"/campagin"}
+              className="flex flex-row items-center gap-4 text-[#2e3e48] font-regular rounded-bl-lg rounded-tl-lg w-full p-2"
+            >
+              <div className="bg-[#2e3e48] text-white p-1 rounded-sm">
+                <MdCampaign />
+              </div>
+              <span>Campaign</span>
             </Link>
           </div>
           <div className="w-[90%] h-10">

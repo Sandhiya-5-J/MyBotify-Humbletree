@@ -12,12 +12,22 @@ export default function Domain() {
   const [activeTab, setActiveTab] = useState("domain");
   const [domain, setDomain] = useState("");
   const [activeInfo, setActiveInfo] = useState("");
+  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [addAccount, setAccount] = useState("No");
+
   const handleAccount = (account: string) => {
     if (account === "add") {
       setAccount(addAccount === "add" ? "render" : "add");
     } else {
       setAccount("No");
+    }
+  };
+
+  const handleClickInfo = (info: string, domainName: string, storeId?: number) => {
+    setActiveInfo(info);
+    setDomain(domainName);
+    if (storeId) {
+      setSelectedStoreId(storeId);
     }
   };
 
@@ -50,7 +60,7 @@ export default function Domain() {
               onClickTab={(account: string) => {
                 handleAccount(account);
               }}
-              onClickInfo={setActiveInfo}
+              onClickInfo={handleClickInfo}
               domain={domain}
             />
           )}
@@ -63,6 +73,7 @@ export default function Domain() {
               onClickInfo={setActiveInfo}
               domain={domain}
               name={activeInfo}
+              storeId={selectedStoreId}
             />
           )}
           <Footer />

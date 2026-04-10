@@ -92,14 +92,14 @@ export default function SideBar({
               //   onClickInfo("");
               // }}
               className={`flex flex-row items-center gap-4 ${
-                activeTab === "campaign"
+                activeTab === "campagin"
                   ? "text-white bg-[#2e3e48]"
                   : "text-[#2e3e48]"
               } font-regular rounded-bl-lg rounded-tl-lg w-full p-2 `}
             >
               <div
                 className={`${
-                  activeTab === "campaign"
+                  activeTab === "campagin"
                     ? "bg-[#CAF389] text-[#2e3e48]"
                     : "bg-[#2e3e48] text-white"
                 } p-1 rounded-sm`}
@@ -109,7 +109,7 @@ export default function SideBar({
               <span>Campaign</span>
             </Link>
           </div>
-          {activeInfo === "info" && activeTab === "campaign" && (
+          {activeInfo === "info" && activeTab === "campagin" && (
             <div className="w-[52%] h-10">
               <div className="flex flex-row items-center gap-4 text-[#2e3e48] bg-[#CAF389] font-regular rounded-bl-lg rounded-tl-lg w-full p-1">
                 <div className="p-1 ">
