@@ -7,10 +7,10 @@ import HeaderWithPopovers from "../../common/header";
 import Footer from "../../common/footer";
 import SideBar from "../common/side_bar";
 
-import ContentCampagin from "./content";
+import ContentCampaign from "./content";
 
-export default function Campagin() {
-  const [activeTab, setActiveTab] = useState("campagin");
+export default function Campaign() {
+  const [activeTab, setActiveTab] = useState("campaign");
   const [domain, setDomain] = useState("");
   const [activeInfo, setActiveInfo] = useState("");
   const [addAccount, setAccount] = useState("No");
@@ -46,7 +46,7 @@ export default function Campagin() {
           />
         </div>
         <div className="w-[61%] h-full flex flex-col items-center py-4 border-r-2 border-gray-300 ">
-          {activeTab === "campagin" && activeInfo === "" && <ContentCampagin />}
+          {activeTab === "campaign" && activeInfo === "" && <ContentCampaign />}
 
           <Footer />
         </div>

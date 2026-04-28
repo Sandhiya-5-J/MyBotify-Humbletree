@@ -3,5 +3,6 @@ from .docs import tags_metadata as tags_metadata
 from .store.routes import store as store
 from .user.routes import user as user
 from .campaign.routes import router as campaign
+from .website.routes import router as website
 
-__all__ = ["chat", "user", "store", "campaign"]
+__all__ = ["chat", "user", "store", "campaign", "website"]

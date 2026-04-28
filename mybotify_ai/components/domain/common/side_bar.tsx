@@ -6,6 +6,7 @@ import {
   MdCampaign,
   MdPlayArrow,
   MdOutlineArrowBack,
+  MdBarChart,
 } from "react-icons/md";
 import { FaCircle } from "react-icons/fa6";
 import { IoLogOut } from "react-icons/io5";
@@ -46,10 +47,6 @@ export default function SideBar({
           <div className="w-[90%] h-10">
             <Link
               href={"/domain"}
-              // onClick={() => {
-              //   onClickTab("domain");
-              //   onClickInfo("");
-              // }}
               className={`flex flex-row items-center gap-4 ${
                 activeTab === "domain"
                   ? "text-white bg-[#2e3e48]"
@@ -80,26 +77,45 @@ export default function SideBar({
             </div>
           )}
           {activeInfo === "" &&
-            (activeTab === "domain" || activeTab === "campagin") && (
+            (activeTab === "domain" || activeTab === "campaign") && (
               <div className="pt-1"></div>
             )}
 
+          {/* Analytics Tab */}
           <div className="w-[90%] h-10">
             <Link
-              href={"/campagin"}
-              // onClick={() => {
-              //   onClickTab("campaign");
-              //   onClickInfo("");
-              // }}
+              href={"/analytics"}
               className={`flex flex-row items-center gap-4 ${
-                activeTab === "campagin"
+                activeTab === "analytics"
                   ? "text-white bg-[#2e3e48]"
                   : "text-[#2e3e48]"
               } font-regular rounded-bl-lg rounded-tl-lg w-full p-2 `}
             >
               <div
                 className={`${
-                  activeTab === "campagin"
+                  activeTab === "analytics"
+                    ? "bg-[#CAF389] text-[#2e3e48]"
+                    : "bg-[#2e3e48] text-white"
+                } p-1 rounded-sm`}
+              >
+                <MdBarChart />
+              </div>
+              <span>Analytics</span>
+            </Link>
+          </div>
+
+          <div className="w-[90%] h-10">
+            <Link
+              href={"/campaign"}
+              className={`flex flex-row items-center gap-4 ${
+                activeTab === "campaign"
+                  ? "text-white bg-[#2e3e48]"
+                  : "text-[#2e3e48]"
+              } font-regular rounded-bl-lg rounded-tl-lg w-full p-2 `}
+            >
+              <div
+                className={`${
+                  activeTab === "campaign"
                     ? "bg-[#CAF389] text-[#2e3e48]"
                     : "bg-[#2e3e48] text-white"
                 } p-1 rounded-sm`}
@@ -109,7 +125,7 @@ export default function SideBar({
               <span>Campaign</span>
             </Link>
           </div>
-          {activeInfo === "info" && activeTab === "campagin" && (
+          {activeInfo === "info" && activeTab === "campaign" && (
             <div className="w-[52%] h-10">
               <div className="flex flex-row items-center gap-4 text-[#2e3e48] bg-[#CAF389] font-regular rounded-bl-lg rounded-tl-lg w-full p-1">
                 <div className="p-1 ">

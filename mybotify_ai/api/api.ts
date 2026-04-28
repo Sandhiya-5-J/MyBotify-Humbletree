@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "@/lib/auth";
+import { getToken, removeToken } from "@/lib/auth";
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -16,5 +16,19 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Handle global responses
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/signup";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

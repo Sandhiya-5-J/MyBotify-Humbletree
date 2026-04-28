@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { getUserRole } from "@/lib/auth";
+import { FaRobot, FaUser } from "react-icons/fa";
 
 type Props = {
   messages: { text: string; isUser: boolean }[];
@@ -64,24 +65,64 @@ const parseMessage = (text: string) => {
   });
 };
 
+const TypingIndicator = () => (
+  <div className="flex items-center gap-1 px-2 py-1">
+    <div className="w-2 h-2 bg-[#2e3e48] rounded-full animate-pulse-dot" style={{ animationDelay: "0s" }} />
+    <div className="w-2 h-2 bg-[#2e3e48] rounded-full animate-pulse-dot" style={{ animationDelay: "0.2s" }} />
+    <div className="w-2 h-2 bg-[#2e3e48] rounded-full animate-pulse-dot" style={{ animationDelay: "0.4s" }} />
+  </div>
+);
+
+const formatTime = () => {
+  const now = new Date();
+  return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
 const ChatMessages = ({ messages }: Props) => (
-  <div className="flex-1 p-4 space-y-4 flex flex-col-reverse items-center h-[60vh] overflow-y-auto no-scrollbar whitespace-pre-line">
+  <div className="flex-1 p-4 space-y-1 flex flex-col-reverse items-stretch overflow-y-auto no-scrollbar whitespace-pre-line">
     {messages.map((msg, index) => (
       <div
         key={index}
-        className={`p-2 rounded-lg max-w-[70%] my-4 ${
-          msg.isUser ? "ml-auto text-right" : "mr-auto bg-[#CAF389]"
-        } break-words whitespace-pre-line animate-fade`}
+        className={`flex items-end gap-2 my-1.5 animate-slide-up ${
+          msg.isUser ? "flex-row-reverse" : "flex-row"
+        }`}
       >
-        {msg.text === "Loading..." ? (
-          <div className="flex space-x-1 justify-start items-center">
-            <div className="w-1.5 h-1.5 bg-gray-700 rounded-full animate-bounce [animation-delay:0s]" />
-            <div className="w-1.5 h-1.5 bg-gray-700 rounded-full animate-bounce [animation-delay:0.2s]" />
-            <div className="w-1.5 h-1.5 bg-gray-700 rounded-full animate-bounce [animation-delay:0.4s]" />
+        {/* Avatar */}
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+            msg.isUser
+              ? "bg-[#2e3e48] text-white"
+              : "bg-[#CAF389] text-[#2e3e48]"
+          }`}
+        >
+          {msg.isUser ? (
+            <FaUser className="text-xs" />
+          ) : (
+            <FaRobot className="text-sm" />
+          )}
+        </div>
+
+        {/* Bubble */}
+        <div className="flex flex-col max-w-[70%]">
+          <div
+            className={`px-4 py-2.5 text-[15px] leading-relaxed ${
+              msg.isUser ? "chat-bubble-user" : "chat-bubble-bot text-[#2e3e48]"
+            } break-words whitespace-pre-line`}
+          >
+            {msg.text === "Loading..." ? (
+              <TypingIndicator />
+            ) : (
+              parseMessage(msg.text)
+            )}
           </div>
-        ) : (
-          parseMessage(msg.text)
-        )}
+          <span
+            className={`text-[10px] text-gray-400 mt-1 ${
+              msg.isUser ? "text-right mr-1" : "ml-1"
+            }`}
+          >
+            {formatTime()}
+          </span>
+        </div>
       </div>
     ))}
   </div>

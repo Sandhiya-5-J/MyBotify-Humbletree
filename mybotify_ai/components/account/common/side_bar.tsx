@@ -63,7 +63,7 @@ export default function SideBar({ activeTab, onClickTab }: SideBarProps) {
           </div>
           <div className="w-[90%] h-10">
             <Link
-              href={"/campagin"}
+              href={"/campaign"}
               className="flex flex-row items-center gap-4 text-[#2e3e48] font-regular rounded-bl-lg rounded-tl-lg w-full p-2"
             >
               <div className="bg-[#2e3e48] text-white p-1 rounded-sm">

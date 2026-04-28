@@ -10,7 +10,7 @@ import { getMyStores } from "@/api/store";
 import { getStoreCampaigns } from "@/api/campaign";
 import AddCampaignModal from "./add_campaign_modal";
 
-export default function ContentCampagin() {
+export default function ContentCampaign() {
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

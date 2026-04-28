@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-from app.api import chat, store, tags_metadata, user, campaign
+from app.api import chat, store, tags_metadata, user, campaign, website
 from app.core.database import pool
 
 
@@ -40,5 +40,6 @@ def create_app() -> FastAPI:
     app.include_router(chat, prefix="/api/chat", tags=["chat"])
     app.include_router(store, prefix="/api/store", tags=["store"])
     app.include_router(campaign, prefix="/api/campaign", tags=["campaign"])
+    app.include_router(website, prefix="/api/website", tags=["website"])
 
     return app
