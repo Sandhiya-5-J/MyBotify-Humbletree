@@ -14,6 +14,7 @@ import Image from "next/image";
 import MainFooter from "../common/main_footer";
 import { registerUser } from "@/api/signup";
 import countryOptions from "../common/country";
+import toast from "react-hot-toast";
 
 type FormValues = {
   name: string;
@@ -82,7 +83,7 @@ export default function SignUp() {
 
   const onSubmit = async (value: FormValues) => {
     if (!checked) {
-      alert("Please accept the terms and conditions");
+      toast.error("Please accept the terms and conditions");
       return;
     }
 
@@ -92,7 +93,7 @@ export default function SignUp() {
       name: value.name,
       email: value.email,
       password: value.password,
-      phone_number: value.phoneNumber,
+      phone_number: value.phoneNumber ? parseInt(value.phoneNumber, 10) : undefined,
     };
 
     try {
@@ -101,10 +102,15 @@ export default function SignUp() {
       setIsOtp(true);
     } catch (error: any) {
       console.error(error);
-      const errorMessage =
-        error?.response?.data?.detail ||
-        "Something went wrong. Please try again.";
-      alert(errorMessage);
+      let errorMessage = "Something went wrong. Please try again.";
+      if (error?.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map((err: any) => err.msg).join(", ");
+        } else {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false); // Stop loading
     }

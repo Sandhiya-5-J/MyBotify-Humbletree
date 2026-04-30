@@ -11,9 +11,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { getMyWebsites, createWebsite, updateWebsite, deleteWebsite } from "@/api/website";
+import toast from "react-hot-toast";
 
 type AddAccountProps = {
   onClickTab: (tab: string) => void;
+  onClickDomain?: (domain: string) => void;
 };
 
 type WebsiteItem = {
@@ -24,7 +26,7 @@ type WebsiteItem = {
   is_active: boolean;
 };
 
-export default function ContentWebsite({ onClickTab }: AddAccountProps) {
+export default function ContentWebsite({ onClickTab, onClickDomain }: AddAccountProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [websites, setWebsites] = useState<WebsiteItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,12 +66,13 @@ export default function ContentWebsite({ onClickTab }: AddAccountProps) {
     setIsSubmitting(true);
     try {
       await createWebsite({ url: newUrl.trim(), name: newName.trim() || undefined });
+      toast.success("Website added successfully!");
       setNewUrl("");
       setNewName("");
       setShowAddModal(false);
       fetchWebsites();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add website");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,18 +81,21 @@ export default function ContentWebsite({ onClickTab }: AddAccountProps) {
   const handleStatusChange = async (id: number, newStatus: string) => {
     try {
       await updateWebsite(id, { status: newStatus });
+      toast.success(`Website ${newStatus === "Active" ? "activated" : "deactivated"}`);
       fetchWebsites();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update status");
     }
   };
 
   const handleDeleteWebsite = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this website?")) return;
     try {
       await deleteWebsite(id);
+      toast.success("Website deleted successfully");
       fetchWebsites();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete website");
     }
   };
 
@@ -194,11 +200,12 @@ export default function ContentWebsite({ onClickTab }: AddAccountProps) {
         {currentRows.length > 0 ? (
           currentRows.map((website) => (
             <div key={website.id} className="pb-4">
-              <div className="bg-white w-full h-10 flex flex-row items-center">
+              <div className="bg-white w-full h-10 flex flex-row items-center hover:bg-gray-50 transition-colors rounded">
                 {/* Website Info */}
                 <div className="w-1/3 px-4 truncate">
                   <h1
-                    className="text-[#2e3e48] font-sans text-sm font-medium"
+                    onClick={() => onClickDomain && onClickDomain(website.name || website.url)}
+                    className="text-[#2e3e48] font-sans text-sm font-medium cursor-pointer hover:underline"
                     title={website.url}
                   >
                     {website.name || website.url}

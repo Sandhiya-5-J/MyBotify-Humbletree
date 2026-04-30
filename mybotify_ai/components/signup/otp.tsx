@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Key, useRef, useState } from "react";
 import Image from "next/image";
 import { resendOtp, verifyOtp } from "@/api/verify_otp";
+import toast from "react-hot-toast";
 
 type OtpModalProps = {
   isOpen: boolean;
@@ -55,18 +56,20 @@ export default function OtpPopup({ isOpen, onClose, email }: OtpModalProps) {
     setLoading(true);
     if (finalOtp.length < 6) {
       setLoading(false);
-      alert("Please enter a valid OTP");
+      toast.error("Please enter a valid OTP");
       return;
     }
 
     verifyOtp(email, finalOtp)
       .then((response) => {
         console.log(response.data);
-        router.push("/account");
+        toast.success("Email verified successfully! Please log in.");
+        onClose();
+        router.push("/");
       })
       .catch((error) => {
         console.error(error);
-        alert(error.response?.data?.detail || "Verification failed");
+        toast.error(error.response?.data?.detail || "Verification failed");
       })
       .finally(() => {
         setLoading(false); // stop loading
@@ -78,11 +81,11 @@ export default function OtpPopup({ isOpen, onClose, email }: OtpModalProps) {
       .then((response) => {
         console.log(response.data);
         clearOtp();
-        alert(response.data.message);
+        toast.success(response.data.message);
       })
       .catch((error) => {
         console.error(error);
-        alert(error.response?.data?.detail || "Resend failed");
+        toast.error(error.response?.data?.detail || "Resend failed");
       });
   };
 
@@ -143,7 +146,7 @@ export default function OtpPopup({ isOpen, onClose, email }: OtpModalProps) {
           )}
         </div>
         <p className="text-sm text-gray-600 mt-4 text-center">
-          Verification code is sent to: <strong>email id</strong>. For security
+          Verification code is sent to: <strong>{email}</strong>. For security
           reasons, the code will expire in <strong>10 minute</strong>.
         </p>
         <div className="pt-2 justify-center flex">

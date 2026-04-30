@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { IoSend } from "react-icons/io5";
 
 type Props = {
@@ -8,6 +8,16 @@ type Props = {
 };
 
 const ChatInput = ({ message, setMessage, onSend }: Props) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize the textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [message]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -18,6 +28,7 @@ const ChatInput = ({ message, setMessage, onSend }: Props) => {
   return (
     <div className="glow-input rounded-2xl flex items-end bg-white p-3 border border-gray-200 shadow-lg transition-all duration-300">
       <textarea
+        ref={textareaRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}

@@ -8,14 +8,19 @@ if sys.platform == "win32":
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api import chat, store, tags_metadata, user, campaign, website
 from app.core.database import pool
+from app.core.rate_limiter import limiter
+from app.core.scheduler import start_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await pool.open()
+    start_scheduler()
     yield
     await pool.close()
 
@@ -24,6 +29,11 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Mybotify", openapi_tags=tags_metadata, version="1.0.0", lifespan=lifespan
     )
+
+    # Attach rate limiter to the app
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

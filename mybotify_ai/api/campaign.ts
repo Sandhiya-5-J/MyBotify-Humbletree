@@ -46,3 +46,36 @@ export const generateCampaignContent = async (data: {
     handleApiError(error);
   }
 };
+
+/** Update an existing campaign */
+export const updateCampaign = async (
+  campaignId: number,
+  data: {
+    name?: string;
+    platform?: string;
+    status?: string;
+    budget?: number;
+    target_audience?: string;
+    generated_copy?: string;
+    products_targeted?: string;
+    ad_creative_url?: string;
+  }
+) => {
+  try {
+    const res = await API.put(`/api/campaign/${campaignId}`, data);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+/** Delete a campaign */
+export const deleteCampaign = async (campaignId: number) => {
+  try {
+    const res = await API.delete(`/api/campaign/${campaignId}`);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+

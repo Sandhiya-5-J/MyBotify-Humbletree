@@ -94,9 +94,9 @@ export default function AnalyticsDashboard() {
   return (
     <div className="w-full min-h-screen bg-[#F1F5F2]">
       <HeaderWithPopovers />
-      <div className="flex min-h-[calc(100vh-64px)]">
+      <div className="flex min-h-[calc(100vh-64px)] flex-col md:flex-row">
         {/* Sidebar */}
-        <div className="w-[14%] min-h-full">
+        <div className="hidden md:block md:w-[14%] min-h-full">
           <SideBar
             activeTab="analytics"
             onClickTab={() => {}}
@@ -106,8 +106,8 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col border-r-2 border-gray-300">
-          <div className="flex-1 overflow-auto px-8 py-6 no-scrollbar">
+        <div className="w-full md:flex-1 flex flex-col border-r-2 border-gray-300">
+          <div className="flex-1 overflow-auto px-4 md:px-8 py-6 no-scrollbar">
             {/* Page Title + Store Selector */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -119,19 +119,27 @@ export default function AnalyticsDashboard() {
                 </p>
               </div>
 
-              {stores.length > 0 && (
-                <select
-                  value={selectedStoreId || ""}
-                  onChange={(e) => setSelectedStoreId(Number(e.target.value))}
-                  className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-[#2e3e48] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CAF389] focus:border-transparent"
-                >
-                  {stores.map((store) => (
-                    <option key={store.id} value={store.id}>
-                      {store.store_name}
-                    </option>
-                  ))}
+              <div className="flex items-center gap-3">
+                {stores.length > 0 && (
+                  <select
+                    value={selectedStoreId || ""}
+                    onChange={(e) => setSelectedStoreId(Number(e.target.value))}
+                    className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-[#2e3e48] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CAF389] focus:border-transparent"
+                  >
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.store_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <select className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-[#2e3e48] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CAF389] focus:border-transparent">
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="ytd">Year to Date</option>
                 </select>
-              )}
+              </div>
             </div>
 
             {loading ? (
@@ -160,7 +168,7 @@ export default function AnalyticsDashboard() {
                 />
 
                 {/* Revenue Chart — full width */}
-                <RevenueChart orders={orders} />
+                <RevenueChart monthlyRevenue={analytics?.sales_analysis?.monthly_revenue} />
 
                 {/* Campaign Performance + Platform Pie — side by side */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">

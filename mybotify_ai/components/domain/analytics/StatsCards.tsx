@@ -10,9 +10,13 @@ import {
 
 interface StatsCardsProps {
   analytics: {
-    total_revenue?: number;
-    total_orders?: number;
-    total_products?: number;
+    sales_analysis?: {
+      total_revenue?: number;
+      total_orders?: number;
+    };
+    market_analysis?: {
+      total_products?: number;
+    };
   } | null;
   campaignCount: number;
 }
@@ -63,7 +67,7 @@ export default function StatsCards({ analytics, campaignCount }: StatsCardsProps
   const stats: StatItem[] = [
     {
       label: "Total Revenue",
-      value: `$${(analytics?.total_revenue || 0).toLocaleString()}`,
+      value: `$${(analytics?.sales_analysis?.total_revenue || 0).toLocaleString()}`,
       icon: <FaDollarSign className="text-lg" />,
       gradient: "from-emerald-500 to-green-600",
       iconBg: "bg-emerald-100 text-emerald-600",
@@ -72,7 +76,7 @@ export default function StatsCards({ analytics, campaignCount }: StatsCardsProps
     },
     {
       label: "Total Orders",
-      value: String(analytics?.total_orders || 0),
+      value: String(analytics?.sales_analysis?.total_orders || 0),
       icon: <FaShoppingCart className="text-lg" />,
       gradient: "from-blue-500 to-indigo-600",
       iconBg: "bg-blue-100 text-blue-600",
@@ -81,7 +85,7 @@ export default function StatsCards({ analytics, campaignCount }: StatsCardsProps
     },
     {
       label: "Products",
-      value: String(analytics?.total_products || 0),
+      value: String(analytics?.market_analysis?.total_products || 0),
       icon: <FaBoxOpen className="text-lg" />,
       gradient: "from-amber-500 to-orange-600",
       iconBg: "bg-amber-100 text-amber-600",
@@ -120,13 +124,13 @@ export default function StatsCards({ analytics, campaignCount }: StatsCardsProps
               <h3 className="text-2xl font-bold text-[#2e3e48] mt-1">
                 {stat.label === "Total Revenue" ? (
                   <AnimatedNumber
-                    value={analytics?.total_revenue || 0}
+                    value={analytics?.sales_analysis?.total_revenue || 0}
                     prefix="$"
                   />
                 ) : stat.label === "Total Orders" ? (
-                  <AnimatedNumber value={analytics?.total_orders || 0} />
+                  <AnimatedNumber value={analytics?.sales_analysis?.total_orders || 0} />
                 ) : stat.label === "Products" ? (
-                  <AnimatedNumber value={analytics?.total_products || 0} />
+                  <AnimatedNumber value={analytics?.market_analysis?.total_products || 0} />
                 ) : (
                   <AnimatedNumber value={campaignCount} />
                 )}

@@ -11,44 +11,18 @@ import {
 } from "recharts";
 
 interface RevenueChartProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  orders: any[];
+  monthlyRevenue?: { month: string; revenue: number; orders: number }[];
 }
 
-function generateRevenueData(orders: RevenueChartProps["orders"]) {
-  // Group orders by date and sum revenue
-  const revenueByDay: Record<string, number> = {};
-
-  if (orders && orders.length > 0) {
-    orders.forEach((order) => {
-      const date = order.order_date
-        ? new Date(order.order_date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          })
-        : "Unknown";
-      revenueByDay[date] =
-        (revenueByDay[date] || 0) + (order.total_price || 0);
-    });
+function generateRevenueData(monthlyRevenue: RevenueChartProps["monthlyRevenue"]) {
+  if (monthlyRevenue && monthlyRevenue.length > 0) {
+    return monthlyRevenue.map((data) => ({
+      date: data.month,
+      revenue: Math.round(data.revenue),
+    }));
   }
 
-  // If we have real data, use it
-  if (Object.keys(revenueByDay).length > 0) {
-    return Object.entries(revenueByDay)
-      .slice(-7)
-      .map(([date, revenue]) => ({ date, revenue: Math.round(revenue) }));
-  }
-
-  // Demo data for empty states
-  return [
-    { date: "Mon", revenue: 1200 },
-    { date: "Tue", revenue: 1900 },
-    { date: "Wed", revenue: 1600 },
-    { date: "Thu", revenue: 2400 },
-    { date: "Fri", revenue: 2100 },
-    { date: "Sat", revenue: 3200 },
-    { date: "Sun", revenue: 2800 },
-  ];
+  return [];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,9 +40,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function RevenueChart({ orders }: RevenueChartProps) {
-  const data = generateRevenueData(orders);
-  const hasRealData = orders && orders.length > 0;
+export default function RevenueChart({ monthlyRevenue }: RevenueChartProps) {
+  const data = generateRevenueData(monthlyRevenue);
+  const hasRealData = monthlyRevenue && monthlyRevenue.length > 0;
 
   return (
     <div className="chart-card p-6">
@@ -76,7 +50,7 @@ export default function RevenueChart({ orders }: RevenueChartProps) {
         <div>
           <h3 className="text-lg font-bold text-[#2e3e48]">Revenue Overview</h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            {hasRealData ? "Based on your order data" : "Sample data — upload orders to see real metrics"}
+            {hasRealData ? "Based on your monthly revenue" : "Awaiting data — upload orders to see real metrics"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -85,42 +59,54 @@ export default function RevenueChart({ orders }: RevenueChartProps) {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <AreaChart
-          data={data}
-          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-        >
-          <defs>
-            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#CAF389" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#CAF389" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 12, fill: "#999" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12, fill: "#999" }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `$${v}`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="revenue"
-            stroke="#7CC832"
-            strokeWidth={2.5}
-            fill="url(#revenueGradient)"
-            dot={{ r: 4, fill: "#7CC832", stroke: "#fff", strokeWidth: 2 }}
-            activeDot={{ r: 6, fill: "#CAF389", stroke: "#2e3e48", strokeWidth: 2 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {hasRealData ? (
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart
+            data={data}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+          >
+            <defs>
+              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#CAF389" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#CAF389" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 12, fill: "#999" }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#999" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `$${v}`}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="#7CC832"
+              strokeWidth={2.5}
+              fill="url(#revenueGradient)"
+              dot={{ r: 4, fill: "#7CC832", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: "#CAF389", stroke: "#2e3e48", strokeWidth: 2 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-[280px] bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 font-medium">No revenue data available</p>
+          <p className="text-sm text-gray-400 mt-1">Connect your store to see sales metrics</p>
+        </div>
+      )}
     </div>
   );
 }

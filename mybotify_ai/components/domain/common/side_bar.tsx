@@ -12,6 +12,7 @@ import { FaCircle } from "react-icons/fa6";
 import { IoLogOut } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { removeToken } from "@/lib/auth";
 type SideBarProps = {
   activeTab: string;
   onClickTab: (tab: string) => void;
@@ -27,6 +28,7 @@ export default function SideBar({
 }: SideBarProps) {
   const router = useRouter();
   const clickLogout = () => {
+    removeToken();
     router.push("/");
   };
   const clickBack = () => {

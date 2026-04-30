@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.api.campaign.service import (
@@ -26,12 +26,13 @@ router = APIRouter()
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignResponse)
 async def create_new_campaign(
     campaign: CampaignCreate,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[dict, Depends(get_current_user)],
     db: Session = Depends(get_session),
 ):
     """Create a new campaign for a store."""
     user = db.query(User).filter(User.email == current_user["email"]).first()
-    return create_campaign(db, campaign, user.id)
+    return create_campaign(db, campaign, user.id, background_tasks)
 
 
 @router.get("/store/{store_id}", response_model=List[CampaignResponse])

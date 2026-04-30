@@ -48,15 +48,8 @@ def register_user(user_data: UserCreate, db: Session) -> User:
     # Create new user
     hashed_password = pwd_context.hash(user_data.password)
 
-    # In development mode, auto-verify users (skip email verification)
-    is_dev = settings.PYTHON_ENV == "development"
-
-    if is_dev:
-        email_otp = None
-        email_otp_hash = None
-    else:
-        email_otp = get_otp()
-        email_otp_hash = create_email_verification_token({"otp": email_otp})
+    email_otp = get_otp()
+    email_otp_hash = create_email_verification_token({"otp": email_otp})
 
     db_user = User(
         name=user_data.name,
@@ -67,17 +60,12 @@ def register_user(user_data: UserCreate, db: Session) -> User:
         email_verification=email_otp_hash,
     )
 
-    # In dev mode, explicitly override the column default to None
-    if is_dev:
-        db_user.email_verification = None
-        db_user.phone_number_verification = None
-
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
 
-    # Send email verification (skip in dev mode)
-    if not is_dev and email_otp:
+    # Send email verification
+    if email_otp:
         email_subject, email_body = generate_email_body(
             user_data.name, email_otp, email_type=EmailType.ACCOUNT_CREATION
         )

@@ -9,6 +9,7 @@ import {
   requestResetPassword,
 } from "@/api/login";
 import { getUserRole } from "@/lib/auth";
+import toast from "react-hot-toast";
 
 type LoginModalProps = {
   isOpen: boolean;
@@ -64,6 +65,7 @@ export default function LoginPopup({
     setLoading(true);
     try {
       await loginUser(value.email, value.password);
+      toast.success("Successfully logged in!");
       // Role-based redirect
       const role = getUserRole();
       if (role === "admin") {
@@ -72,7 +74,7 @@ export default function LoginPopup({
         router.push("/account");
       }
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -82,9 +84,9 @@ export default function LoginPopup({
     try {
       const res = await requestResetPassword(value.email);
       setIsReset(true);
-      alert(res.message);
+      toast.success(res.message);
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -98,9 +100,9 @@ export default function LoginPopup({
       setIsReset(false);
       setIsForgotPassword(false);
       reset();
-      alert(res.message);
+      toast.success(res.message);
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -263,13 +265,13 @@ export default function LoginPopup({
                 </label>
                 <input
                   type="password"
-                  {...register("password", passwordValidation)}
-                  id="password"
+                  {...register("newPassword", passwordValidation)}
+                  id="newPassword"
                   className="w-full mt-1 p-2 border border-gray-300 rounded-lg outline-none "
                 />
-                {errors.password && (
+                {errors.newPassword && (
                   <p className="text-red-500 text-xs">
-                    {errors.password.message}
+                    {errors.newPassword.message}
                   </p>
                 )}
               </div>

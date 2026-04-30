@@ -2,37 +2,28 @@
  * Auth utilities for managing JWT tokens and authentication state.
  */
 
+import Cookies from "js-cookie";
+
 const TOKEN_KEY = "mybotify_token";
 
-/** Save JWT to localStorage */
+/** Save JWT to cookie — expires in 1 day to match backend JWT lifetime */
 export const setToken = (token: string) => {
-    if (typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, token);
-    }
+    Cookies.set(TOKEN_KEY, token, { expires: 1, path: '/' });
 };
 
-/** Get JWT from localStorage */
+/** Get JWT from cookie */
 export const getToken = (): string | null => {
-    if (typeof window !== "undefined") {
-        return localStorage.getItem(TOKEN_KEY);
-    }
-    return null;
+    return Cookies.get(TOKEN_KEY) || null;
 };
 
-/** Remove JWT from localStorage (logout) */
+/** Remove JWT from cookie (logout) */
 export const removeToken = () => {
-    if (typeof window !== "undefined") {
-        localStorage.removeItem(TOKEN_KEY);
-    }
-};
-
-/** Check if user is authenticated */
-export const isAuthenticated = (): boolean => {
-    return !!getToken();
+    Cookies.remove(TOKEN_KEY, { path: '/' });
 };
 
 /** Decode JWT payload (without verification — just reads data) */
-const decodeToken = (): Record<string, string> | null => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const decodeToken = (): Record<string, any> | null => {
     const token = getToken();
     if (!token) return null;
     try {
@@ -42,6 +33,25 @@ const decodeToken = (): Record<string, string> | null => {
     } catch {
         return null;
     }
+};
+
+/** Check if the JWT token has expired by reading its `exp` claim */
+export const isTokenExpired = (): boolean => {
+    const payload = decodeToken();
+    if (!payload?.exp) return true;
+    // JWT exp is in seconds, Date.now() is in milliseconds
+    return Date.now() >= payload.exp * 1000;
+};
+
+/** Check if user is authenticated (token exists AND is not expired) */
+export const isAuthenticated = (): boolean => {
+    const token = getToken();
+    if (!token) return false;
+    if (isTokenExpired()) {
+        removeToken(); // Clean up stale cookie
+        return false;
+    }
+    return true;
 };
 
 /** Get user role from JWT */

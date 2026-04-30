@@ -35,13 +35,7 @@ function prepareData(campaigns: Campaign[]) {
     }));
   }
 
-  // Demo data
-  return [
-    { name: "Summer Sale", spent: 450, revenue: 1200, clicks: 340 },
-    { name: "New Launch", spent: 320, revenue: 980, clicks: 280 },
-    { name: "Retargeting", spent: 280, revenue: 750, clicks: 190 },
-    { name: "Brand Aware", spent: 600, revenue: 1500, clicks: 420 },
-  ];
+  return [];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,58 +70,71 @@ export default function CampaignPerformance({ campaigns }: CampaignPerformancePr
           <p className="text-xs text-gray-400 mt-0.5">
             {hasRealData
               ? "Spend vs Revenue per campaign"
-              : "Sample data — create campaigns to see real metrics"}
+              : "Awaiting data — create campaigns to see real metrics"}
           </p>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart
-          data={data}
-          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-          barGap={4}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 11, fill: "#999" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12, fill: "#999" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            iconType="circle"
-            iconSize={8}
-            wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-          />
-          <Bar
-            dataKey="revenue"
-            name="Revenue"
-            fill="#CAF389"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
-          <Bar
-            dataKey="spent"
-            name="Spent"
-            fill="#F59E0B"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
-          <Bar
-            dataKey="clicks"
-            name="Clicks"
-            fill="#60A5FA"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={32}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      {hasRealData ? (
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart
+            data={data}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            barGap={4}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 11, fill: "#999" }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "#999" }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+            />
+            <Bar
+              dataKey="revenue"
+              name="Revenue"
+              fill="#CAF389"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={32}
+            />
+            <Bar
+              dataKey="spent"
+              name="Spent"
+              fill="#F59E0B"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={32}
+            />
+            <Bar
+              dataKey="clicks"
+              name="Clicks"
+              fill="#60A5FA"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={32}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-[280px] bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 font-medium">No campaign data available</p>
+          <p className="text-sm text-gray-400 mt-1">Create a campaign to see performance metrics</p>
+        </div>
+      )}
     </div>
   );
 }

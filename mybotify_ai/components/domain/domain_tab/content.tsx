@@ -8,6 +8,7 @@ import { SiGoogleads } from "react-icons/si";
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { getMyStores } from "@/api/store";
 import { getStoreCampaigns } from "@/api/campaign";
+import toast from "react-hot-toast";
 
 type AddAccountProps = {
   onClickTab: (tab: string) => void;
@@ -79,6 +80,7 @@ export default function ContentDomain({
         }
       } catch (e) {
         console.error(e);
+        toast.error("Failed to load stores");
       } finally {
         setLoading(false);
       }
@@ -186,8 +188,8 @@ export default function ContentDomain({
         {/* Table Rows */}
         {currentRows.length > 0 ? (
           currentRows.map((store) => (
-            <div key={store.id} className="pb-4">
-              <div className="bg-white w-full h-10 flex flex-row items-center">
+              <div key={store.id} className="pb-4">
+              <div className="bg-white w-full h-10 flex flex-row items-center hover:bg-gray-50 transition-colors rounded">
                 {/* Domain Info */}
                 <div className="w-1/3 px-4 truncate">
                   <h1

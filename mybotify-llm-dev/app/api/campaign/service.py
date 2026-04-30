@@ -1,9 +1,19 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.models import Campaign, Store
 from app.api.campaign.utils.schema import CampaignCreate, CampaignUpdate
+from app.services.ad_platforms.mock import MockAdPlatformAdapter
 
-def create_campaign(db: Session, campaign: CampaignCreate, user_id: int) -> Campaign:
+ad_platform = MockAdPlatformAdapter()
+
+def deploy_campaign_task(campaign_data: dict, campaign_id: int):
+    try:
+        external_id = ad_platform.deploy_campaign(campaign_data)
+        # Note: We would typically save external_id to the DB here
+    except Exception as e:
+        print(f"Failed to deploy campaign: {e}")
+
+def create_campaign(db: Session, campaign: CampaignCreate, user_id: int, background_tasks: BackgroundTasks = None) -> Campaign:
     # Ensure store belongs to user
     store = db.query(Store).filter(Store.id == campaign.store_id, Store.user_id == user_id).first()
     if not store:
@@ -13,6 +23,10 @@ def create_campaign(db: Session, campaign: CampaignCreate, user_id: int) -> Camp
     db.add(db_campaign)
     db.commit()
     db.refresh(db_campaign)
+    
+    if background_tasks:
+        background_tasks.add_task(deploy_campaign_task, campaign.model_dump(), db_campaign.id)
+        
     return db_campaign
 
 def get_campaigns_for_store(db: Session, store_id: int, user_id: int):

@@ -7,62 +7,80 @@ type Props = {
   messages: { text: string; isUser: boolean }[];
 };
 
-// Enhanced parser
-const parseMessage = (text: string) => {
-  // Match bold (**text**) and URLs
-  const boldRegex = /\*\*(.*?)\*\*/g;
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-  // Split the text into parts to render
-  const parts = text.split(/(\*\*.*?\*\*|https?:\/\/[^\s]+|\[DASHBOARD_BUTTON\])/g);
+// Enhanced parser handling markdown and custom tags
+const MessageContent = ({ text }: { text: string }) => {
+  // If the message contains the dashboard button token, split it out
+  if (text.includes("[DASHBOARD_BUTTON]")) {
+    const parts = text.split("[DASHBOARD_BUTTON]");
+    return (
+      <>
+        {parts.map((part, index) => (
+          <React.Fragment key={index}>
+            {part.trim() && (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                className="prose prose-sm max-w-none text-[15px]"
+                components={{
+                  a: ({ node, ...props }) => {
+                    const isMyBotify = props.href?.includes("mybotify");
+                    const label = isMyBotify ? "Sign up" : props.children;
+                    const url = isMyBotify ? "https://mybotify.com/signup" : props.href;
+                    return (
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-2">
+                        <Button className="text-sm px-4 py-1 rounded-full">{label}</Button>
+                      </a>
+                    );
+                  }
+                }}
+              >
+                {part}
+              </ReactMarkdown>
+            )}
+            {index < parts.length - 1 && (
+              <a 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  const role = getUserRole();
+                  window.location.href = role === "admin" ? "/admin" : "/account";
+                }} 
+                className="inline-block mt-4 w-full"
+              >
+                <Button className="bg-[#162120] text-white rounded-3xl px-6 w-full sm:w-auto">
+                  Go to Dashboard
+                </Button>
+              </a>
+            )}
+          </React.Fragment>
+        ))}
+      </>
+    );
+  }
 
-  return parts.map((part, index) => {
-    if (part === "[DASHBOARD_BUTTON]") {
-      return (
-        <a 
-          key={`dashboard-${index}`} 
-          href="#" 
-          onClick={(e) => {
-            e.preventDefault();
-            const role = getUserRole();
-            window.location.href = role === "admin" ? "/admin" : "/account";
-          }} 
-          className="inline-block mt-4 w-full"
-        >
-          <Button className="bg-[#162120] text-white rounded-3xl px-6 w-full sm:w-auto">
-            Go to Dashboard
-          </Button>
-        </a>
-      );
-    }
-
-    if (boldRegex.test(part)) {
-      return (
-        <strong key={`bold-${index}`} className="font-semibold">
-          {part.replace(/\*\*/g, "")}
-        </strong>
-      );
-    }
-
-    if (urlRegex.test(part)) {
-      const isMyBotify = part.includes("mybotify");
-      const url = isMyBotify ? "https://mybotify.com/signup" : part;
-      const label = isMyBotify ? "Sign up" : "Click";
-
-      return (
-        <a
-          key={`url-${index}`}
-          href={url}
-          rel="noopener noreferrer"
-          className="inline-block mt-2"
-        >
-          <Button className="text-sm px-4 py-1 rounded-full">{label}</Button>
-        </a>
-      );
-    }
-
-    return <span key={`text-${index}`}>{part}</span>;
-  });
+  // Regular markdown rendering
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      className="prose prose-sm max-w-none text-[15px]"
+      components={{
+        a: ({ node, ...props }) => {
+          const isMyBotify = props.href?.includes("mybotify");
+          const label = isMyBotify ? "Sign up" : props.children;
+          const url = isMyBotify ? "https://mybotify.com/signup" : props.href;
+          return (
+            <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-2">
+              <Button className="text-sm px-4 py-1 rounded-full">{label}</Button>
+            </a>
+          );
+        }
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
 };
 
 const TypingIndicator = () => (
@@ -107,12 +125,12 @@ const ChatMessages = ({ messages }: Props) => (
           <div
             className={`px-4 py-2.5 text-[15px] leading-relaxed ${
               msg.isUser ? "chat-bubble-user" : "chat-bubble-bot text-[#2e3e48]"
-            } break-words whitespace-pre-line`}
+            } break-words whitespace-pre-line overflow-hidden`}
           >
             {msg.text === "Loading..." ? (
               <TypingIndicator />
             ) : (
-              parseMessage(msg.text)
+              <MessageContent text={msg.text} />
             )}
           </div>
           <span

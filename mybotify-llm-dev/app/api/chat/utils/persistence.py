@@ -15,4 +15,5 @@ async def get_checkpointer():
         return None
     if _checkpointer is None:
         _checkpointer = AsyncPostgresSaver(pool)
+        await _checkpointer.setup()
     return _checkpointer

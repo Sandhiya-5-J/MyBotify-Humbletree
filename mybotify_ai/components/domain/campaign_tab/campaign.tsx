@@ -36,8 +36,8 @@ export default function Campaign() {
   return (
     <div className="w-full h-full bg-[#F1F5F2]">
       <HeaderWithPopovers />
-      <div className="flex h-[90%]">
-        <div className="w-[14%] h-full">
+      <div className="flex h-[90%] flex-col md:flex-row">
+        <div className="hidden md:block md:w-[14%] h-full">
           <SideBar
             activeTab={activeTab}
             onClickTab={setActiveTab}
@@ -45,7 +45,7 @@ export default function Campaign() {
             onClickInfo={setActiveInfo}
           />
         </div>
-        <div className="w-[61%] h-full flex flex-col items-center py-4 border-r-2 border-gray-300 ">
+        <div className="w-full md:w-[61%] h-full flex flex-col items-center py-4 border-r-2 border-gray-300 ">
           {activeTab === "campaign" && activeInfo === "" && <ContentCampaign />}
 
           <Footer />

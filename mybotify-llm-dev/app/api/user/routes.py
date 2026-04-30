@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
 from app.api.user.schema import (
@@ -29,12 +29,14 @@ from app.core.database import get_session
 from app.core.middleware.auth import get_current_user, require_admin
 from app.models import User
 from app.models.User import UserRole
+from app.core.rate_limiter import limiter
 
 user = APIRouter()
 
 
 @user.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
-async def create_user(user_data: UserCreate, db: Session = Depends(get_session)):
+@limiter.limit("3/minute")
+async def create_user(request: Request, user_data: UserCreate, db: Session = Depends(get_session)):
     return register_user(user_data, db)
 
 
@@ -46,8 +48,9 @@ async def user_verification(
 
 
 @user.post("/login", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def user_login(
-    user_data: UserLogin, response: Response, db: Session = Depends(get_session)
+    request: Request, user_data: UserLogin, response: Response, db: Session = Depends(get_session)
 ):
     """
     Login a user and set a secure HTTP-only cookie with the JWT token.
@@ -58,8 +61,9 @@ async def user_login(
 
 
 @user.post("/reset-password/request", status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
 async def request_reset_password(
-    reset_data: ResetPasswordRequest, db: Session = Depends(get_session)
+    request: Request, reset_data: ResetPasswordRequest, db: Session = Depends(get_session)
 ):
     """
     Request a password reset by sending an OTP to the user's email.
@@ -68,8 +72,9 @@ async def request_reset_password(
 
 
 @user.post("/reset-password/confirm", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def confirm_reset_password(
-    reset_data: ResetPasswordConfirm, db: Session = Depends(get_session)
+    request: Request, reset_data: ResetPasswordConfirm, db: Session = Depends(get_session)
 ):
     """
     Confirm password reset using the OTP and set new password.

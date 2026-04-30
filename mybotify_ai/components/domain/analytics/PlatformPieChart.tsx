@@ -27,12 +27,7 @@ function prepareData(campaigns: Campaign[]) {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }
 
-  // Demo data
-  return [
-    { name: "Facebook", value: 5 },
-    { name: "Instagram", value: 3 },
-    { name: "Google Ads", value: 2 },
-  ];
+  return [];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,50 +57,64 @@ export default function PlatformPieChart({ campaigns }: PlatformPieChartProps) {
         <p className="text-xs text-gray-400 mt-0.5">
           {hasRealData
             ? "Campaigns by platform"
-            : "Sample distribution"}
+            : "Awaiting data — connect campaigns first"}
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={85}
-            paddingAngle={4}
-            dataKey="value"
-            strokeWidth={0}
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={PLATFORM_COLORS[entry.name] || PLATFORM_COLORS.Other}
-              />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
+      {hasRealData ? (
+        <>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={85}
+                paddingAngle={4}
+                dataKey="value"
+                strokeWidth={0}
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={PLATFORM_COLORS[entry.name] || PLATFORM_COLORS.Other}
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
 
-      {/* Custom Legend */}
-      <div className="flex flex-wrap justify-center gap-4 mt-2">
-        {data.map((item, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{
-                backgroundColor:
-                  PLATFORM_COLORS[item.name] || PLATFORM_COLORS.Other,
-              }}
-            />
-            <span className="text-xs text-gray-600 font-medium">
-              {item.name}
-            </span>
+          {/* Custom Legend */}
+          <div className="flex flex-wrap justify-center gap-4 mt-2">
+            {data.map((item, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor:
+                      PLATFORM_COLORS[item.name] || PLATFORM_COLORS.Other,
+                  }}
+                />
+                <span className="text-xs text-gray-600 font-medium">
+                  {item.name}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-[260px] bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 font-medium">No platform data</p>
+          <p className="text-sm text-gray-400 mt-1">Connect campaigns first</p>
+        </div>
+      )}
     </div>
   );
 }

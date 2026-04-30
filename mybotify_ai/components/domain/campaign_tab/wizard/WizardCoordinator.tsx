@@ -6,6 +6,7 @@ import ProductsStep from "./ProductsStep";
 import CreativeStep from "./CreativeStep";
 import ReviewStep from "./ReviewStep";
 import { generateCampaignContent, createCampaign } from "@/api/campaign";
+import toast from "react-hot-toast";
 
 export interface CampaignState {
   name: string;
@@ -49,10 +50,11 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
       });
       if (res && res.generated_copy) {
         updateState({ generatedCopy: res.generated_copy });
+        toast.success("Ad copy generated successfully!");
         handleNext();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate ad copy");
     } finally {
       setIsGenerating(false);
     }
@@ -70,9 +72,10 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
         generated_copy: state.generatedCopy,
         products_targeted: state.productsTargeted,
       });
+      toast.success("Campaign created successfully!");
       onSuccess();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save campaign");
     } finally {
       setIsSaving(false);
     }

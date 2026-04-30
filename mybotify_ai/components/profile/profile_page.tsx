@@ -7,6 +7,7 @@ import { isAuthenticated, isAdmin, getUserEmail } from "@/lib/auth";
 import { getMyProfile, updateMyProfile } from "@/api/profile";
 import HeaderWithPopovers from "../common/header";
 import Footer from "../common/footer";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -52,9 +53,9 @@ export default function ProfilePage() {
             if (phone) data.phone_number = parseInt(phone);
 
             await updateMyProfile(data);
-            alert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
         } catch (error: any) {
-            alert(error.message || "Failed to update profile");
+            toast.error(error.message || "Failed to update profile");
         } finally {
             setSaving(false);
         }
@@ -62,11 +63,11 @@ export default function ProfilePage() {
 
     const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
-            alert("Passwords don't match");
+            toast.error("Passwords don't match");
             return;
         }
         if (newPassword.length < 8) {
-            alert("Password must be at least 8 characters");
+            toast.error("Password must be at least 8 characters");
             return;
         }
 
@@ -77,12 +78,12 @@ export default function ProfilePage() {
                 new_password: newPassword,
                 confirm_password: confirmPassword,
             });
-            alert("Password changed successfully!");
+            toast.success("Password changed successfully!");
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
         } catch (error: any) {
-            alert(error.message || "Failed to change password");
+            toast.error(error.message || "Failed to change password");
         } finally {
             setSaving(false);
         }
@@ -99,7 +100,10 @@ export default function ProfilePage() {
     if (!authChecked || loading) {
         return (
             <div className="w-full h-full bg-[#F1F5F2] flex items-center justify-center min-h-screen">
-                <p className="text-gray-500 text-lg">Loading...</p>
+                <svg className="animate-spin h-8 w-8 text-[#2e3e48]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </div>
         );
     }
