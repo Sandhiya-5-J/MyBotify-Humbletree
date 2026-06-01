@@ -464,3 +464,99 @@ def build_customer_name(row: dict) -> str:
     last = row.get("Last Name", "")
     name = f"{first} {last}".strip()
     return name if name else "Unknown"
+
+
+def get_store_prediction(store_id: int, db: Session) -> dict:
+    from langchain.chat_models import init_chat_model
+    from langchain_core.messages import HumanMessage
+    from app.api.chat.utils.config import ChatSettings
+    import json
+    
+    # 1. Gather historical data using get_store_analytics
+    try:
+        analytics = get_store_analytics(store_id, db)
+    except HTTPException:
+        raise
+        
+    monthly_revenue = analytics.get("sales_analysis", {}).get("monthly_revenue", [])
+    low_inventory = analytics.get("market_analysis", {}).get("low_inventory", [])
+    top_customers = analytics.get("sales_analysis", {}).get("top_customers", [])
+    avg_customer_spend = analytics.get("customer_analysis", {}).get("avg_customer_spend", 0)
+    total_customers = analytics.get("customer_analysis", {}).get("total_customers", 0)
+    
+    # Format data for prompt
+    data_summary = f"Monthly Revenue Trend: {monthly_revenue}\n"
+    data_summary += f"Total Revenue: {analytics['sales_analysis'].get('total_revenue', 0)}\n"
+    data_summary += f"Total Orders: {analytics['sales_analysis'].get('total_orders', 0)}\n"
+    data_summary += f"Total Products: {analytics['market_analysis'].get('total_products', 0)}\n"
+    data_summary += f"Low Inventory Products (stock < 10): {low_inventory}\n"
+    data_summary += f"Total Customers: {total_customers}\n"
+    data_summary += f"Average Customer Spend: {avg_customer_spend}\n"
+    data_summary += f"Top Customers: {top_customers}\n"
+    
+    prompt_text = f"""
+    You are an expert e-commerce financial analyst, growth marketer, and inventory strategist. 
+    Analyze the following store data and predict the upcoming week's performance, stockout risks, and customer churn.
+    
+    Data:
+    {data_summary}
+    
+    Return your response strictly as a JSON object matching this schema:
+    {{
+        "predicted_revenue": float, // Predicted revenue for next week
+        "growth_percentage": string, // e.g. "+8.4%" or "-2.5%"
+        "insights": list of strings, // 3 premium, highly actionable growth strategies or insights
+        "inventory_forecast": [ // Forecast low-inventory items or products selling fast
+            {{
+                "product_title": string,
+                "current_inventory": int,
+                "days_to_sell_out": int, // predicted days before stock is gone
+                "sales_velocity_weekly": int, // predicted items sold per week
+                "risk_level": string // "High" (sells out < 7 days), "Medium" (sells out < 20 days), "Low"
+            }}
+        ],
+        "churn_risk_analysis": {{
+            "overall_churn_rate": string, // e.g. "12.5%"
+            "risk_segments": [ // analysis of customer retention groups
+                {{
+                    "segment_name": string, // e.g. "VIP Customers", "One-time Buyers", etc.
+                    "size": int, // number of customers
+                    "churn_probability": string, // e.g. "25%"
+                    "actionable_recommendation": string // highly specific email sequence idea or strategy to retain them
+                }}
+            ]
+        }}
+    }}
+    Do not include markdown blocks (like ```json) or any other text outside the JSON object. Just return raw JSON.
+    """
+    
+    CONFIG = ChatSettings()
+    model = init_chat_model(
+        f"{CONFIG.PROVIDER}:{CONFIG.MODEL}",
+        api_key=CONFIG.API_KEY,
+    )
+    
+    try:
+        response = model.invoke([HumanMessage(content=prompt_text)])
+        content = response.content.strip()
+        if content.startswith("```json"):
+            content = content[7:-3]
+        elif content.startswith("```"):
+            content = content[3:-3]
+        prediction = json.loads(content)
+        return prediction
+    except Exception as e:
+        import sys
+        print(f"Prediction Error: {e}", file=sys.stderr, flush=True)
+        return {
+            "predicted_revenue": 0.0,
+            "growth_percentage": "0%",
+            "insights": ["Not enough data to generate predictions."],
+            "inventory_forecast": [],
+            "churn_risk_analysis": {
+                "overall_churn_rate": "0%",
+                "risk_segments": []
+            }
+        }
+
+

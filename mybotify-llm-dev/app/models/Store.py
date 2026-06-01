@@ -35,6 +35,7 @@ class Store(Base):
     orders = relationship("Order", back_populates="store", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="store", cascade="all, delete-orphan")
     campaigns = relationship("Campaign", back_populates="store", cascade="all, delete-orphan")
+    ad_accounts = relationship("AdAccount", back_populates="store", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Store(id={self.id}, name='{self.store_name}', url='{self.store_url}')>"

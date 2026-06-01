@@ -7,6 +7,7 @@ import {
   MdPlayArrow,
   MdOutlineArrowBack,
   MdBarChart,
+  MdEmail,
 } from "react-icons/md";
 import { FaCircle } from "react-icons/fa6";
 import { IoLogOut } from "react-icons/io5";
@@ -138,6 +139,29 @@ export default function SideBar({
               </div>
             </div>
           )}
+
+          {/* Emails Tab */}
+          <div className="w-[90%] h-10">
+            <Link
+              href={"/emails"}
+              className={`flex flex-row items-center gap-4 ${
+                activeTab === "emails"
+                  ? "text-white bg-[#2e3e48]"
+                  : "text-[#2e3e48]"
+              } font-regular rounded-bl-lg rounded-tl-lg w-full p-2 `}
+            >
+              <div
+                className={`${
+                  activeTab === "emails"
+                    ? "bg-[#CAF389] text-[#2e3e48]"
+                    : "bg-[#2e3e48] text-white"
+                } p-1 rounded-sm`}
+              >
+                <MdEmail />
+              </div>
+              <span>Emails</span>
+            </Link>
+          </div>
         </div>
         <div className="flex flex-row items-center justify-center h-10">
           <button

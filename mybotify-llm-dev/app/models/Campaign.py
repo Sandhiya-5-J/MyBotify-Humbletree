@@ -20,6 +20,11 @@ class Campaign(Base):
     products_targeted = Column(Text, nullable=True) # JSON list of selected product names
     ad_creative_url = Column(String, nullable=True)
     
+    # Real Ad Platform Tracking Info
+    external_campaign_id = Column(String, nullable=True)
+    ad_account_id = Column(String, nullable=True)
+    error_message = Column(Text, nullable=True)
+    
     # Tracking metrics (dummy default zero for now)
     spent = Column(Float, default=0.0)
     revenue = Column(Float, default=0.0)

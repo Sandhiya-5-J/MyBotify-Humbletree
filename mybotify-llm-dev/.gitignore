@@ -94,3 +94,7 @@ docker-compose.override.yml
 # System files
 .vscode/
 .env
+
+# Custom ignores
+venv3/
+test_generation.py

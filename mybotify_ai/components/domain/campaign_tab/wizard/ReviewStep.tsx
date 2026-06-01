@@ -26,9 +26,21 @@ export default function ReviewStep({ state, updateState, onSave, onBack, isSavin
             <div><span className="font-semibold">Audience:</span> {state.targetAudience}</div>
           </div>
         </div>
-        <div className="flex-1">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Generated Ad Copy (You can edit this)</label>
-          <textarea value={localCopy} onChange={(e) => setLocalCopy(e.target.value)} onBlur={() => updateState({ generatedCopy: localCopy })} className="w-full p-3 border rounded h-[200px] focus:ring-2 focus:ring-[#CAF389] outline-none" />
+        <div className="flex-1 flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Generated Ad Copy (You can edit this)</label>
+            <textarea value={localCopy} onChange={(e) => setLocalCopy(e.target.value)} onBlur={() => updateState({ generatedCopy: localCopy })} className="w-full p-3 border rounded h-[250px] focus:ring-2 focus:ring-[#CAF389] outline-none" />
+          </div>
+          {state.adCreativeUrl && (
+            <div className="w-full md:w-[250px] flex flex-col">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Generated Creative</label>
+              <div className="w-full aspect-square rounded-lg border overflow-hidden shadow-sm bg-gray-100 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={state.adCreativeUrl} alt="Ad Creative" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 break-all">{state.adCreativeUrl}</p>
+            </div>
+          )}
         </div>
       </div>
       <div className="flex justify-between pt-4 border-t mt-4">

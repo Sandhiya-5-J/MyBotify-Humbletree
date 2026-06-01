@@ -215,7 +215,7 @@ MAX_RETRIES = 3
 BASE_DELAY = 2  # seconds
 
 
-async def reply_stream(message: str, conversation_id: str, store_id: int = None, is_admin: bool = False) -> AsyncGenerator[str]:
+async def reply_stream(message: str, conversation_id: str, store_id: int | None = None, is_admin: bool | None = False) -> AsyncGenerator[str, None]:
     config = {
         'configurable': {
             'thread_id': conversation_id,
@@ -291,7 +291,7 @@ async def reply_stream(message: str, conversation_id: str, store_id: int = None,
     yield "data: [DONE]\n\n"
 
 
-async def reply(message: str, conversation_id: str, store_id: int = None, is_admin: bool = False) -> ReplyResponseModel:
+async def reply(message: str, conversation_id: str, store_id: int | None = None, is_admin: bool | None = False) -> ReplyResponseModel:
     config = {
         'configurable': {
             'thread_id': conversation_id,

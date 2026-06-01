@@ -12,7 +12,8 @@ import RevenueChart from "./RevenueChart";
 import CampaignPerformance from "./CampaignPerformance";
 import PlatformPieChart from "./PlatformPieChart";
 import RecentOrders from "./RecentOrders";
-import { getMyStores, getStoreAnalytics, getStoreOrders } from "@/api/store";
+import PredictiveInsights from "./PredictiveInsights";
+import { getMyStores, getStoreAnalytics, getStoreOrders, getStorePrediction } from "@/api/store";
 import { getStoreCampaigns } from "@/api/campaign";
 
 export default function AnalyticsDashboard() {
@@ -23,6 +24,7 @@ export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [prediction, setPrediction] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,10 +60,11 @@ export default function AnalyticsDashboard() {
   const loadDashboardData = async (storeId: number) => {
     setLoading(true);
     try {
-      const [analyticsData, ordersData, campaignsData] = await Promise.allSettled([
+      const [analyticsData, ordersData, campaignsData, predictionData] = await Promise.allSettled([
         getStoreAnalytics(storeId),
         getStoreOrders(storeId),
         getStoreCampaigns(storeId),
+        getStorePrediction(storeId),
       ]);
 
       setAnalytics(
@@ -72,6 +75,9 @@ export default function AnalyticsDashboard() {
       );
       setCampaigns(
         campaignsData.status === "fulfilled" ? campaignsData.value || [] : []
+      );
+      setPrediction(
+        predictionData.status === "fulfilled" ? predictionData.value : null
       );
     } catch (err) {
       console.error(err);
@@ -166,6 +172,9 @@ export default function AnalyticsDashboard() {
                   analytics={analytics}
                   campaignCount={campaigns.length}
                 />
+
+                {/* Predictive Insights */}
+                <PredictiveInsights prediction={prediction} loading={loading} />
 
                 {/* Revenue Chart — full width */}
                 <RevenueChart monthlyRevenue={analytics?.sales_analysis?.monthly_revenue} />

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -81,3 +81,56 @@ class OrderResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Ad Account schemas ---
+
+class AdAccountCreate(BaseModel):
+    platform: str
+    account_id: str
+    access_token: str
+    refresh_token: Optional[str] = None
+
+
+class AdAccountResponse(BaseModel):
+    id: int
+    store_id: int
+    platform: str
+    account_id: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Predictive Analytics schemas ---
+
+class InventoryForecastItem(BaseModel):
+    product_title: str
+    current_inventory: int
+    days_to_sell_out: int
+    sales_velocity_weekly: int
+    risk_level: str  # High, Medium, Low
+
+
+class ChurnSegmentItem(BaseModel):
+    segment_name: str
+    size: int
+    churn_probability: str
+    actionable_recommendation: str
+
+
+class ChurnRiskAnalysis(BaseModel):
+    overall_churn_rate: str
+    risk_segments: List[ChurnSegmentItem]
+
+
+class PredictionResponse(BaseModel):
+    predicted_revenue: float
+    growth_percentage: str
+    insights: List[str]
+    inventory_forecast: Optional[List[InventoryForecastItem]] = []
+    churn_risk_analysis: Optional[ChurnRiskAnalysis] = None
+
+

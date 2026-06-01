@@ -6,8 +6,20 @@ import { MdAdd, MdDelete } from "react-icons/md";
 import { SiGoogleads } from "react-icons/si";
 import { FaMoneyCheck } from "react-icons/fa6";
 import { IoStatsChart } from "react-icons/io5";
+import { HiOutlineSparkles } from "react-icons/hi2";
+import { FiArrowRight, FiCheckCircle, FiChevronDown, FiChevronUp, FiAward, FiSliders, FiActivity } from "react-icons/fi";
 import { getMyStores } from "@/api/store";
-import { getStoreCampaigns, deleteCampaign, updateCampaign } from "@/api/campaign";
+import { 
+  getStoreCampaigns, 
+  deleteCampaign, 
+  updateCampaign, 
+  getCampaignOptimization, 
+  applyCampaignOptimization,
+  getCampaignVariants,
+  generateABVariants,
+  updateVariantStatus,
+  declareVariantWinner
+} from "@/api/campaign";
 import AddCampaignModal from "./add_campaign_modal";
 import toast from "react-hot-toast";
 
@@ -16,6 +28,20 @@ export default function ContentCampaign() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+
+  // AI Budget Optimizer state
+  const [optimizeStoreId, setOptimizeStoreId] = useState<number | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [applying, setApplying] = useState(false);
+  const [optimizeDone, setOptimizeDone] = useState(false);
+
+  // A/B Testing states
+  const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [generatingVariants, setGeneratingVariants] = useState(false);
+  const [declaringWinnerId, setDeclaringWinnerId] = useState<number | null>(null);
 
   const fetchStoresAndCampaigns = async () => {
     setLoading(true);
@@ -77,6 +103,105 @@ export default function ContentCampaign() {
       fetchStoresAndCampaigns();
     } catch (e: any) {
       toast.error(e.message || "Failed to update campaign status");
+    }
+  };
+
+  // AI Budget Optimizer handlers
+  const handleScanOptimize = async () => {
+    const storeId = optimizeStoreId || (stores.length > 0 ? stores[0].id : null);
+    if (!storeId) {
+      toast.error("Please connect a store first.");
+      return;
+    }
+    setScanning(true);
+    setRecommendations([]);
+    setOptimizeDone(false);
+    try {
+      const result = await getCampaignOptimization(storeId);
+      setRecommendations(result?.recommendations || []);
+      if (!result?.recommendations?.length) {
+        toast("No optimization opportunities found. All campaigns are performing well!", { icon: "👍" });
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to scan campaigns");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleApplyOptimization = async () => {
+    if (!recommendations.length) return;
+    setApplying(true);
+    try {
+      await applyCampaignOptimization(recommendations);
+      toast.success("🎉 AI budget reallocations applied successfully!");
+      setOptimizeDone(true);
+      setRecommendations([]);
+      fetchStoresAndCampaigns();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to apply optimizations");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  // A/B Testing handlers
+  const handleToggleABTesting = async (campaignId: number) => {
+    if (expandedCampaignId === campaignId) {
+      setExpandedCampaignId(null);
+      setVariants([]);
+      return;
+    }
+    setExpandedCampaignId(campaignId);
+    setLoadingVariants(true);
+    try {
+      const res = await getCampaignVariants(campaignId);
+      setVariants(res || []);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to fetch variants");
+    } finally {
+      setLoadingVariants(false);
+    }
+  };
+
+  const handleGenerateABVariants = async (campaignId: number) => {
+    setGeneratingVariants(true);
+    try {
+      const res = await generateABVariants(campaignId);
+      if (res && res.length > 0) {
+        setVariants(res);
+        toast.success("🧪 AI A/B Test Variations generated successfully!");
+        fetchStoresAndCampaigns();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate variations");
+    } finally {
+      setGeneratingVariants(false);
+    }
+  };
+
+  const handleToggleVariantStatus = async (campaignId: number, variantId: number, currentActive: boolean) => {
+    try {
+      const updated = await updateVariantStatus(campaignId, variantId, !currentActive);
+      toast.success(`Variant ${!currentActive ? "activated" : "paused"} successfully`);
+      setVariants(prev => prev.map(v => v.id === variantId ? updated : v));
+      fetchStoresAndCampaigns();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update variant status");
+    }
+  };
+
+  const handleDeclareWinner = async (campaignId: number, variantId: number) => {
+    setDeclaringWinnerId(variantId);
+    try {
+      const updated = await declareVariantWinner(campaignId, variantId);
+      toast.success("🎉 Winning variant promoted successfully!");
+      setVariants(prev => prev.map(v => v.id === variantId ? updated : { ...v, is_winner: false, is_active: false }));
+      fetchStoresAndCampaigns();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to declare variant winner");
+    } finally {
+      setDeclaringWinnerId(null);
     }
   };
 
@@ -182,6 +307,143 @@ export default function ContentCampaign() {
           </div>
         </div>
 
+        {/* AI Budget Optimizer Panel */}
+        <div className="px-4 pb-2">
+          <div className="relative overflow-hidden rounded-xl border border-[#caf389]/50 bg-gradient-to-br from-[#f0fce0] via-white to-[#edffd6] p-5 shadow-md">
+            {/* Decorative glow */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#caf389] rounded-full opacity-20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-[#2e3e48] rounded-full opacity-5 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-[#2e3e48] to-[#1a2329] h-10 w-10 flex justify-center items-center rounded-lg shadow-lg">
+                  <HiOutlineSparkles className="text-[#caf389] text-xl" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#2e3e48] text-lg">AI Budget Optimizer</h3>
+                  <p className="text-xs text-gray-500">Powered by Gemini &mdash; analyzes ROAS, clicks, and spend to maximize your returns</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {stores.length > 1 && (
+                  <select
+                    value={optimizeStoreId || stores[0]?.id || ""}
+                    onChange={(e) => setOptimizeStoreId(Number(e.target.value))}
+                    className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#caf389]"
+                  >
+                    {stores.map((s) => (
+                      <option key={s.id} value={s.id}>{s.store_name}</option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  onClick={handleScanOptimize}
+                  disabled={scanning || stores.length === 0}
+                  className="flex items-center gap-2 bg-gradient-to-r from-[#2e3e48] to-[#1a2329] hover:from-[#1a2329] hover:to-[#0d1215] disabled:opacity-50 transition-all px-5 py-2.5 text-white font-semibold rounded-xl text-sm shadow-lg hover:shadow-xl"
+                >
+                  {scanning ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-[#caf389]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <HiOutlineSparkles className="text-[#caf389]" />
+                      Scan &amp; Optimize Budgets
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Scanning animation */}
+            {scanning && (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-[#caf389]/30 rounded-full" />
+                  <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-[#2e3e48] rounded-full animate-spin" />
+                </div>
+                <p className="text-sm text-gray-500 font-medium animate-pulse">AI is analyzing campaign performance across all platforms...</p>
+              </div>
+            )}
+
+            {/* Recommendations list */}
+            {!scanning && recommendations.length > 0 && (
+              <div className="space-y-3">
+                {recommendations.map((rec, idx) => (
+                  <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-[#caf389] hover:shadow-sm transition-all">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      {/* From campaign */}
+                      <div className="flex-1 bg-red-50 rounded-lg p-3 border border-red-100">
+                        <div className="text-xs text-red-400 font-semibold mb-1">REDUCE BUDGET</div>
+                        <div className="font-bold text-[#2e3e48] text-sm">{rec.campaign_name_from}</div>
+                        <div className="text-red-600 font-bold text-lg">-${rec.amount_to_shift?.toFixed(2)}</div>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex flex-col items-center">
+                        <FiArrowRight className="text-[#2e3e48] text-xl" />
+                        <span className="text-[10px] text-[#2e3e48] font-bold bg-[#caf389] px-2 py-0.5 rounded-full mt-1">{rec.expected_impact}</span>
+                      </div>
+
+                      {/* To campaign */}
+                      <div className="flex-1 bg-green-50 rounded-lg p-3 border border-green-100">
+                        <div className="text-xs text-green-500 font-semibold mb-1">BOOST BUDGET</div>
+                        <div className="font-bold text-[#2e3e48] text-sm">{rec.campaign_name_to}</div>
+                        <div className="text-green-600 font-bold text-lg">+${rec.amount_to_shift?.toFixed(2)}</div>
+                      </div>
+                    </div>
+
+                    {/* Reasoning */}
+                    <div className="mt-3 text-xs text-gray-500 bg-gray-50 rounded p-2 border border-gray-100">
+                      <span className="font-semibold text-gray-700">AI Reasoning:</span> {rec.reasoning}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Apply button */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={handleApplyOptimization}
+                    disabled={applying}
+                    className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 transition-all px-6 py-3 text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl"
+                  >
+                    {applying ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Applying...
+                      </>
+                    ) : (
+                      <>
+                        <FiCheckCircle />
+                        Apply AI Reallocations
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Success state after applying */}
+            {optimizeDone && recommendations.length === 0 && !scanning && (
+              <div className="flex items-center gap-3 py-4 px-3 bg-green-50 rounded-lg border border-green-200">
+                <FiCheckCircle className="text-green-600 text-2xl flex-shrink-0" />
+                <div>
+                  <p className="font-semibold text-green-800 text-sm">Optimization Applied!</p>
+                  <p className="text-xs text-green-600">Campaign budgets have been updated. Check the metrics below for the new allocations.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Campaign Listings */}
         <div className="p-4">
           {stores.length === 0 && (
@@ -264,11 +526,257 @@ export default function ContentCampaign() {
                         <span className="font-semibold text-gray-800">Target:</span> {campaign.target_audience || "Broad audience"}
                       </div>
                       
-                      {/* Generated Copy */}
-                      {campaign.generated_copy && (
-                        <div className="mt-2 text-sm bg-white p-3 rounded border border-gray-200 text-gray-700">
-                          <div className="text-xs font-semibold text-gray-500 mb-1">AI Generated Ad Copy:</div>
-                          <p className="italic leading-relaxed">&quot;{campaign.generated_copy}&quot;</p>
+                      {/* Generated Copy and Creative */}
+                      {(campaign.generated_copy || campaign.ad_creative_url) && (
+                        <div className="mt-2 text-sm bg-white p-3 rounded border border-gray-200 text-gray-700 flex flex-col md:flex-row gap-4">
+                          {campaign.generated_copy && (
+                            <div className="flex-1">
+                              <div className="text-xs font-semibold text-gray-500 mb-1">AI Generated Ad Copy:</div>
+                              <p className="italic leading-relaxed whitespace-pre-wrap">&quot;{campaign.generated_copy}&quot;</p>
+                            </div>
+                          )}
+                          {campaign.ad_creative_url && (
+                            <div className="w-full md:w-[150px] shrink-0">
+                              <div className="text-xs font-semibold text-gray-500 mb-1">Creative:</div>
+                              <div className="w-full aspect-square rounded border overflow-hidden shadow-sm">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={campaign.ad_creative_url} alt="Campaign Creative" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* A/B Testing Toggle Button */}
+                      <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                        <button
+                          onClick={() => handleToggleABTesting(campaign.id)}
+                          className="flex items-center gap-2 text-xs font-bold text-[#2e3e48] bg-white border border-gray-200 hover:border-[#CAF389] hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+                        >
+                          <FiSliders className="text-[#2e3e48]" />
+                          <span>Ad Copy A/B Testing</span>
+                          {expandedCampaignId === campaign.id ? <FiChevronUp /> : <FiChevronDown />}
+                        </button>
+                        {variants.length > 0 && expandedCampaignId === campaign.id && (
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold bg-white border border-gray-100 px-2 py-1 rounded-md">
+                            <FiActivity className="text-[#CAF389] animate-pulse" />
+                            <span>{variants.filter(v => v.is_active).length} Active Variations</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* A/B Testing Expandable Dashboard */}
+                      {expandedCampaignId === campaign.id && (
+                        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-xl space-y-4 shadow-inner">
+                          {loadingVariants ? (
+                            <div className="flex flex-col items-center justify-center py-8 gap-3">
+                              <div className="w-8 h-8 border-3 border-[#CAF389] border-t-transparent rounded-full animate-spin" />
+                              <p className="text-xs text-gray-500 font-medium">Fetching A/B test variants...</p>
+                            </div>
+                          ) : variants.length === 0 ? (
+                            <div className="text-center py-6 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                              <FiSliders className="mx-auto text-gray-300 text-4xl mb-2" />
+                              <h4 className="font-bold text-[#2e3e48] text-sm mb-1">No Ad Variants Configured</h4>
+                              <p className="text-xs text-gray-400 mb-4 max-w-md mx-auto">Generate multiple AI copy and image variations for this campaign to let our platform auto-optimize for the best conversion rate!</p>
+                              
+                              <button
+                                onClick={() => handleGenerateABVariants(campaign.id)}
+                                disabled={generatingVariants}
+                                className="flex items-center gap-2 mx-auto bg-gradient-to-br from-[#2e3e48] to-[#1C282F] hover:from-[#1C282F] hover:to-[#0D161A] text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow disabled:opacity-50 transition-all"
+                              >
+                                {generatingVariants ? (
+                                  <>
+                                    <svg className="animate-spin h-3.5 w-3.5 text-[#caf389]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Generating A/B Variants...
+                                  </>
+                                ) : (
+                                  <>
+                                    <HiOutlineSparkles className="text-[#caf389]" />
+                                    Setup AI A/B Test (2 angles)
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 gap-2">
+                                <div>
+                                  <h4 className="font-bold text-[#2e3e48] text-sm">🧪 A/B Split Test Dashboard</h4>
+                                  <p className="text-[11px] text-gray-400">Comparing active variations. Traffic and metrics are synced per variant.</p>
+                                </div>
+                                {!variants.some(v => v.is_winner) && (
+                                  <button
+                                    onClick={() => handleGenerateABVariants(campaign.id)}
+                                    disabled={generatingVariants}
+                                    className="flex items-center gap-1 bg-[#2e3e48] hover:bg-gray-800 disabled:opacity-50 text-white font-bold text-[10px] py-1 px-2.5 rounded transition-all"
+                                  >
+                                    Regenerate AI Variants
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Smart marketer recommendation banner */}
+                              {(() => {
+                                const activeVars = variants.filter(v => v.is_active);
+                                if (activeVars.length >= 2) {
+                                  const roas1 = activeVars[0].spent > 0 ? activeVars[0].revenue / activeVars[0].spent : 0;
+                                  const roas2 = activeVars[1].spent > 0 ? activeVars[1].revenue / activeVars[1].spent : 0;
+                                  if (Math.abs(roas1 - roas2) > 0.05) {
+                                    const leadVar = roas1 > roas2 ? activeVars[0] : activeVars[1];
+                                    const percentageDiff = Math.round((Math.max(roas1, roas2) / Math.max(0.1, Math.min(roas1, roas2)) - 1) * 100);
+                                    if (percentageDiff > 5) {
+                                      return (
+                                        <div className="bg-gradient-to-r from-green-50 to-[#caf389]/20 p-3 rounded-lg border border-[#caf389]/50 text-xs flex flex-row items-center gap-2 justify-between">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-base">💡</span>
+                                            <p className="text-green-800 font-semibold leading-snug">
+                                              Smart Suggestion: <strong className="font-bold">{leadVar.name}</strong> is leading with a <strong className="font-bold">{percentageDiff}% higher ROAS</strong>. Declare it as winner to promote it!
+                                            </p>
+                                          </div>
+                                          <button
+                                            onClick={() => handleDeclareWinner(campaign.id, leadVar.id)}
+                                            disabled={declaringWinnerId === leadVar.id}
+                                            className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded font-bold text-[10px] shrink-0"
+                                          >
+                                            {declaringWinnerId === leadVar.id ? "Promoting..." : "Auto-Promote"}
+                                          </button>
+                                        </div>
+                                      );
+                                    }
+                                  }
+                                }
+                                return null;
+                              })()}
+
+                              {/* Side-by-Side Cards */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {variants.map((v, idx) => {
+                                  const roas = v.spent > 0 ? (v.revenue / v.spent) : 0.0;
+                                  
+                                  const otherActive = variants.find(ov => ov.id !== v.id && ov.is_active);
+                                  const otherRoas = otherActive && otherActive.spent > 0 ? (otherActive.revenue / otherActive.spent) : 0.0;
+                                  const isLeading = v.is_active && roas > otherRoas && roas > 0;
+
+                                  return (
+                                    <div 
+                                      key={v.id} 
+                                      className={`flex flex-col rounded-xl border p-4 bg-white transition-all shadow-sm ${
+                                        v.is_winner 
+                                          ? "border-green-400 ring-2 ring-green-100" 
+                                          : isLeading 
+                                            ? "border-[#caf389] shadow-md ring-2 ring-[#caf389]/10" 
+                                            : "border-gray-200"
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between mb-3 border-b pb-2">
+                                        <div className="flex flex-col">
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="font-bold text-gray-800 text-sm">{v.name}</span>
+                                            {v.is_winner && (
+                                              <span className="text-[9px] bg-green-500 text-white px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                                                <FiAward /> WINNER
+                                              </span>
+                                            )}
+                                            {!v.is_winner && isLeading && (
+                                              <span className="text-[9px] bg-[#caf389] text-[#2e3e48] px-1.5 py-0.5 rounded-full font-bold">
+                                                ★ LEADING
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="text-[10px] text-gray-400">Created: {new Date(v.created_at).toLocaleDateString()}</span>
+                                        </div>
+
+                                        {!v.is_winner && (
+                                          <button
+                                            onClick={() => handleToggleVariantStatus(campaign.id, v.id, v.is_active)}
+                                            className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase transition-colors ${
+                                              v.is_active 
+                                                ? "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200" 
+                                                : "bg-gray-100 text-gray-400 hover:bg-gray-200 border border-gray-200"
+                                            }`}
+                                          >
+                                            {v.is_active ? "Active" : "Paused"}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <div className="flex gap-3 text-xs mb-4">
+                                        {v.ad_creative_url && (
+                                          <div className="w-[80px] h-[80px] rounded border overflow-hidden shrink-0 shadow-sm bg-gray-50">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={v.ad_creative_url} alt="variant creative" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                          </div>
+                                        )}
+                                        <div className="flex-1 bg-gray-50 p-2.5 rounded border border-gray-100 max-h-[80px] overflow-y-auto no-scrollbar">
+                                          <p className="italic text-gray-600 leading-normal text-[11px] whitespace-pre-wrap">&quot;{v.ad_copy}&quot;</p>
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                                        <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                                          <div className="text-[10px] text-gray-400 uppercase font-semibold">Spent</div>
+                                          <div className="font-bold text-[#2e3e48]">${v.spent?.toFixed(2) || "0.00"}</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                                          <div className="text-[10px] text-gray-400 uppercase font-semibold">Revenue</div>
+                                          <div className="font-bold text-green-600">${v.revenue?.toFixed(2) || "0.00"}</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                                          <div className="text-[10px] text-gray-400 uppercase font-semibold">Clicks</div>
+                                          <div className="font-bold text-[#2e3e48]">{v.clicks?.toLocaleString() || 0}</div>
+                                        </div>
+                                        <div className={`p-2 rounded border transition-colors ${
+                                          isLeading 
+                                            ? "bg-green-50/50 border-green-200" 
+                                            : "bg-gray-50 border-gray-100"
+                                        }`}>
+                                          <div className="text-[10px] text-gray-400 uppercase font-semibold">ROAS</div>
+                                          <div className={`font-bold text-sm ${isLeading ? "text-green-600" : "text-gray-800"}`}>
+                                            {roas.toFixed(2)}x
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-2 mt-auto">
+                                        <div>
+                                          <div className="flex justify-between text-[9px] text-gray-500 font-bold mb-0.5">
+                                            <span>ROAS PROGRESS</span>
+                                            <span>{roas.toFixed(1)}x</span>
+                                          </div>
+                                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <div 
+                                              className={`h-full rounded-full transition-all duration-500 ${
+                                                v.is_winner 
+                                                  ? "bg-green-500" 
+                                                  : isLeading 
+                                                    ? "bg-[#caf389]" 
+                                                    : "bg-gray-400"
+                                              }`}
+                                              style={{ width: `${Math.min(100, (roas / 4) * 100)}%` }}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {!v.is_winner && v.is_active && (
+                                          <button
+                                            onClick={() => handleDeclareWinner(campaign.id, v.id)}
+                                            disabled={declaringWinnerId !== null}
+                                            className="w-full mt-2 py-1.5 bg-gradient-to-r from-[#2e3e48] to-[#1C282F] hover:from-[#1C282F] hover:to-[#0D161A] text-white rounded font-bold text-[10px] flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                                          >
+                                            <FiAward />
+                                            {declaringWinnerId === v.id ? "Declaring Winner..." : "Declare as Winner & Promote"}
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

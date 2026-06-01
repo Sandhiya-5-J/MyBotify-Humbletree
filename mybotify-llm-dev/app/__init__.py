@@ -11,7 +11,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.api import chat, store, tags_metadata, user, campaign, website
+from app.api import chat, store, tags_metadata, user, campaign, website, emails
 from app.core.database import pool
 from app.core.rate_limiter import limiter
 from app.core.scheduler import start_scheduler
@@ -51,5 +51,6 @@ def create_app() -> FastAPI:
     app.include_router(store, prefix="/api/store", tags=["store"])
     app.include_router(campaign, prefix="/api/campaign", tags=["campaign"])
     app.include_router(website, prefix="/api/website", tags=["website"])
+    app.include_router(emails, prefix="/api/emails", tags=["emails"])
 
     return app

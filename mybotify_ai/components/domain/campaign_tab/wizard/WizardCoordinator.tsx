@@ -17,6 +17,7 @@ export interface CampaignState {
   productsTargeted: string;
   productsContext: string;
   generatedCopy: string;
+  adCreativeUrl: string;
 }
 
 export default function WizardCoordinator({ storeId, onClose, onSuccess }: { storeId: number, onClose: () => void, onSuccess: () => void }) {
@@ -29,7 +30,8 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
     targetAudience: "Broad audience",
     productsTargeted: "[]",
     productsContext: "",
-    generatedCopy: ""
+    generatedCopy: "",
+    adCreativeUrl: ""
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -49,7 +51,10 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
         products_context: state.productsContext,
       });
       if (res && res.generated_copy) {
-        updateState({ generatedCopy: res.generated_copy });
+        updateState({ 
+          generatedCopy: res.generated_copy,
+          adCreativeUrl: res.ad_creative_url || ""
+        });
         toast.success("Ad copy generated successfully!");
         handleNext();
       }
@@ -71,6 +76,7 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
         target_audience: state.targetAudience,
         generated_copy: state.generatedCopy,
         products_targeted: state.productsTargeted,
+        ad_creative_url: state.adCreativeUrl,
       });
       toast.success("Campaign created successfully!");
       onSuccess();
@@ -92,7 +98,7 @@ export default function WizardCoordinator({ storeId, onClose, onSuccess }: { sto
         </div>
         
         <div className="flex-1 flex flex-col">
-          {step === 1 && <DetailsStep state={state} updateState={updateState} onNext={handleNext} onCancel={onClose} />}
+          {step === 1 && <DetailsStep state={state} updateState={updateState} onNext={handleNext} onCancel={onClose} storeId={storeId} />}
           {step === 2 && <ProductsStep state={state} updateState={updateState} onNext={handleNext} onBack={handleBack} storeId={storeId} />}
           {step === 3 && <CreativeStep state={state} updateState={updateState} onGenerate={handleGenerate} onBack={handleBack} isGenerating={isGenerating} />}
           {step === 4 && <ReviewStep state={state} onSave={handleSave} onBack={handleBack} isSaving={isSaving} updateState={updateState} />}

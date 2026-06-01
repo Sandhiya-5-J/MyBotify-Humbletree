@@ -132,3 +132,48 @@ export const disconnectStore = async (storeId: number) => {
     handleApiError(error);
   }
 };
+
+/** Connect a Meta or Google Ad account to a store */
+export const connectAdAccount = async (storeId: number, data: {
+  platform: string;
+  account_id: string;
+  access_token: string;
+  refresh_token?: string;
+}) => {
+  try {
+    const res = await API.post(`/api/store/${storeId}/ad-accounts`, data);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+/** Get connected ad accounts for a store */
+export const getStoreAdAccounts = async (storeId: number) => {
+  try {
+    const res = await API.get(`/api/store/${storeId}/ad-accounts`);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+/** Disconnect an ad account from a store */
+export const disconnectAdAccount = async (storeId: number, platform: string) => {
+  try {
+    const res = await API.delete(`/api/store/${storeId}/ad-accounts/${platform}`);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+/** Get AI predictive insights for a store */
+export const getStorePrediction = async (storeId: number) => {
+  try {
+    const res = await API.get(`/api/store/${storeId}/predict`);
+    return res.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};

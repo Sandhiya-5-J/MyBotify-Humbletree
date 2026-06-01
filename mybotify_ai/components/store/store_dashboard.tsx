@@ -8,6 +8,7 @@ import { getToken } from "@/lib/auth";
 import MarketAnalysis from "./market_analysis";
 import SalesAnalysis from "./sales_analysis";
 import CustomerAnalysis from "./customer_analysis";
+import AdAccounts from "./ad_accounts";
 import ChatBar from "@/components/account/common/chat_bar";
 import HeaderWithPopovers from "@/components/common/header";
 import { IoArrowBack } from "react-icons/io5";
@@ -18,7 +19,7 @@ type Props = { storeId: number };
 export default function StoreDashboard({ storeId }: Props) {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"market" | "sales" | "customers">("market");
+  const [activeTab, setActiveTab] = useState<"market" | "sales" | "customers" | "ad_accounts">("market");
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
@@ -174,6 +175,16 @@ export default function StoreDashboard({ storeId }: Props) {
               >
                 👥 Customer Analysis
               </button>
+              <button
+                onClick={() => setActiveTab("ad_accounts")}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "ad_accounts"
+                    ? "border-amber-600 text-amber-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                🔗 Ad Accounts
+              </button>
             </div>
           </div>
 
@@ -183,8 +194,10 @@ export default function StoreDashboard({ storeId }: Props) {
               <MarketAnalysis data={analytics.market_analysis} currency={store.currency || "USD"} />
             ) : activeTab === "sales" ? (
               <SalesAnalysis data={analytics.sales_analysis} currency={store.currency || "USD"} />
-            ) : (
+            ) : activeTab === "customers" ? (
               <CustomerAnalysis data={analytics.customer_analysis} currency={store.currency || "USD"} />
+            ) : (
+              <AdAccounts storeId={storeId} />
             )}
           </div>
         </div>
