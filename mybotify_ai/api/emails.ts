@@ -28,3 +28,21 @@ export const generateEmailSequence = async (data: EmailGenerateRequest): Promise
     handleApiError(error);
   }
 };
+
+export interface SendTestEmailRequest {
+  to_email: string;
+  subject: string;
+  body: string;
+  call_to_action: string;
+}
+
+export const sendTestEmail = async (data: SendTestEmailRequest): Promise<boolean> => {
+  try {
+    await API.post("/api/emails/send-test", data);
+    return true;
+  } catch (error) {
+    handleApiError(error);
+    return false;
+  }
+};
+

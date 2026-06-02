@@ -7,7 +7,7 @@ import { SiGoogleads } from "react-icons/si";
 import { FaMoneyCheck } from "react-icons/fa6";
 import { IoStatsChart } from "react-icons/io5";
 import { HiOutlineSparkles } from "react-icons/hi2";
-import { FiArrowRight, FiCheckCircle, FiChevronDown, FiChevronUp, FiAward, FiSliders, FiActivity } from "react-icons/fi";
+import { FiArrowRight, FiCheckCircle, FiChevronDown, FiChevronUp, FiAward, FiSliders, FiActivity, FiSettings, FiAlertTriangle, FiList, FiTrendingUp } from "react-icons/fi";
 import { getMyStores } from "@/api/store";
 import { 
   getStoreCampaigns, 
@@ -42,6 +42,144 @@ export default function ContentCampaign() {
   const [loadingVariants, setLoadingVariants] = useState(false);
   const [generatingVariants, setGeneratingVariants] = useState(false);
   const [declaringWinnerId, setDeclaringWinnerId] = useState<number | null>(null);
+
+  // Automated Guardrails & Rules State
+  const [showRuleBuilder, setShowRuleBuilder] = useState<number | null>(null); // campaignId
+  const [activeRules, setActiveRules] = useState<Record<number, any>>({}); // campaignId -> rules config
+  const [ruleLogs, setRuleLogs] = useState<Record<number, Array<{ timestamp: string; message: string; type: "info" | "success" | "warning" | "error" }>>>({});
+  const [ruleNotification, setRuleNotification] = useState<{ campaignId: number; message: string; type: "pause" | "winner" } | null>(null);
+
+  // Load guardrails on load
+  const loadGuardrailRules = (campaignId: number) => {
+    try {
+      const saved = localStorage.getItem(`guardrails_c_${campaignId}`);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Failed to load rules", e);
+    }
+    return {
+      roasGuardrailEnabled: false,
+      roasMinLimit: 1.5,
+      roasSpendThreshold: 100,
+      winnerAutoEnabled: false,
+      winnerMinRoasUplift: 25,
+      winnerClickThreshold: 200,
+    };
+  };
+
+  const saveGuardrailRules = (campaignId: number, newRules: any) => {
+    try {
+      localStorage.setItem(`guardrails_c_${campaignId}`, JSON.stringify(newRules));
+      setActiveRules((prev) => ({ ...prev, [campaignId]: newRules }));
+      addRuleLog(campaignId, "Rules updated and saved successfully.", "success");
+    } catch (e) {
+      console.error("Failed to save rules", e);
+    }
+  };
+
+  const addRuleLog = (campaignId: number, message: string, type: "info" | "success" | "warning" | "error" = "info") => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setRuleLogs((prev) => {
+      const logs = prev[campaignId] || [];
+      return {
+        ...prev,
+        [campaignId]: [{ timestamp, message, type }, ...logs].slice(0, 10), // keep last 10 logs
+      };
+    });
+  };
+
+  // Automated boundary checker engine
+  const evaluateGuardrailRules = async (campaignId: number, variantsList: any[], currentRules: any) => {
+    if (!variantsList || variantsList.length === 0) return;
+    if (variantsList.some(v => v.is_winner)) return;
+
+    const activeVars = variantsList.filter(v => v.is_active);
+    
+    // 1. ROAS Underperformance Auto-Pause
+    if (currentRules.roasGuardrailEnabled) {
+      for (const variant of activeVars) {
+        const spent = variant.spent || 0;
+        const revenue = variant.revenue || 0;
+        const roas = spent > 0 ? revenue / spent : 0;
+        
+        if (spent >= currentRules.roasSpendThreshold && roas < currentRules.roasMinLimit) {
+          addRuleLog(campaignId, `⚠️ Guardrail TRIGGERED: Variant "${variant.name}" has spent $${spent.toFixed(2)} with ROAS of ${roas.toFixed(2)}x (below limit of ${currentRules.roasMinLimit}x).`, "warning");
+          try {
+            await updateVariantStatus(campaignId, variant.id, false);
+            setRuleNotification({
+              campaignId,
+              message: `🔴 Automated Guardrail: Variant "${variant.name}" has been auto-paused due to low ROAS (${roas.toFixed(2)}x < ${currentRules.roasMinLimit.toFixed(1)}x threshold).`,
+              type: "pause"
+            });
+            
+            const res = await getCampaignVariants(campaignId);
+            setVariants(res || []);
+            fetchStoresAndCampaigns();
+            addRuleLog(campaignId, `🔴 Variant "${variant.name}" paused automatically by ROAS guardrail.`, "error");
+            
+            setTimeout(() => setRuleNotification(null), 6000);
+            return;
+          } catch (err: any) {
+            console.error("Auto-pause failed", err);
+            addRuleLog(campaignId, `❌ Failed to auto-pause Variant "${variant.name}": ${err.message}`, "error");
+          }
+        }
+      }
+    }
+
+    // 2. High-Performance Auto-Winner Promotion
+    if (currentRules.winnerAutoEnabled && activeVars.length >= 2) {
+      for (const variant of activeVars) {
+        const clicks = variant.clicks || 0;
+        const spent = variant.spent || 0;
+        const revenue = variant.revenue || 0;
+        const roas = spent > 0 ? revenue / spent : 0;
+        
+        if (clicks >= currentRules.winnerClickThreshold) {
+          const otherVars = activeVars.filter(ov => ov.id !== variant.id);
+          const isWinner = otherVars.every(ov => {
+            const ovSpent = ov.spent || 0;
+            const ovRevenue = ov.revenue || 0;
+            const ovRoas = ovSpent > 0 ? ovRevenue / ovSpent : 0;
+            const roasDifference = ovRoas > 0 ? (roas / ovRoas - 1) * 100 : roas > 0 ? 100 : 0;
+            return roasDifference >= currentRules.winnerMinRoasUplift;
+          });
+
+          if (isWinner) {
+            addRuleLog(campaignId, `🏆 Auto-Winner TRIGGERED: Variant "${variant.name}" reached ${clicks} clicks with superior ROAS.`, "success");
+            try {
+              await declareVariantWinner(campaignId, variant.id);
+              setRuleNotification({
+                campaignId,
+                message: `🏆 Auto-Winner Promoted! Variant "${variant.name}" declared winner automatically due to superior performance (+${currentRules.winnerMinRoasUplift}% ROAS margin).`,
+                type: "winner"
+              });
+              
+              const res = await getCampaignVariants(campaignId);
+              setVariants(res || []);
+              fetchStoresAndCampaigns();
+              addRuleLog(campaignId, `🎉 Variant "${variant.name}" successfully promoted as final winner in the database!`, "success");
+              
+              setTimeout(() => setRuleNotification(null), 6000);
+              return;
+            } catch (err: any) {
+              console.error("Auto-declare winner failed", err);
+              addRuleLog(campaignId, `❌ Failed to auto-declare winner: ${err.message}`, "error");
+            }
+          }
+        }
+      }
+    }
+
+    addRuleLog(campaignId, "Rules check complete. Variations are within performance boundaries.", "info");
+  };
+
+  const handleSaveRulesConfig = async (campaignId: number, newRules: any) => {
+    saveGuardrailRules(campaignId, newRules);
+    await evaluateGuardrailRules(campaignId, variants, newRules);
+  };
 
   const fetchStoresAndCampaigns = async () => {
     setLoading(true);
@@ -150,6 +288,7 @@ export default function ContentCampaign() {
     if (expandedCampaignId === campaignId) {
       setExpandedCampaignId(null);
       setVariants([]);
+      setShowRuleBuilder(null);
       return;
     }
     setExpandedCampaignId(campaignId);
@@ -157,6 +296,22 @@ export default function ContentCampaign() {
     try {
       const res = await getCampaignVariants(campaignId);
       setVariants(res || []);
+      
+      // Load rules and run active boundary checks
+      const rulesObj = loadGuardrailRules(campaignId);
+      setActiveRules(prev => ({ ...prev, [campaignId]: rulesObj }));
+      
+      if (!ruleLogs[campaignId] || ruleLogs[campaignId].length === 0) {
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setRuleLogs(prev => ({
+          ...prev,
+          [campaignId]: [
+            { timestamp, message: "Monitoring engine initialized for A/B Test.", type: "info" }
+          ]
+        }));
+      }
+      
+      await evaluateGuardrailRules(campaignId, res || [], rulesObj);
     } catch (err: any) {
       toast.error(err.message || "Failed to fetch variants");
     } finally {
@@ -608,15 +763,239 @@ export default function ContentCampaign() {
                                   <p className="text-[11px] text-gray-400">Comparing active variations. Traffic and metrics are synced per variant.</p>
                                 </div>
                                 {!variants.some(v => v.is_winner) && (
-                                  <button
-                                    onClick={() => handleGenerateABVariants(campaign.id)}
-                                    disabled={generatingVariants}
-                                    className="flex items-center gap-1 bg-[#2e3e48] hover:bg-gray-800 disabled:opacity-50 text-white font-bold text-[10px] py-1 px-2.5 rounded transition-all"
-                                  >
-                                    Regenerate AI Variants
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setShowRuleBuilder(showRuleBuilder === campaign.id ? null : campaign.id)}
+                                      className="flex items-center gap-1.5 bg-white border border-gray-200 hover:border-[#CAF389] hover:bg-gray-50 text-[#2e3e48] font-bold text-[10px] py-1 px-2.5 rounded transition-all shadow-sm"
+                                    >
+                                      <FiSettings className="text-xs" />
+                                      <span>{showRuleBuilder === campaign.id ? "Hide Rules" : "⚙️ Guardrails"}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleGenerateABVariants(campaign.id)}
+                                      disabled={generatingVariants}
+                                      className="flex items-center gap-1 bg-[#2e3e48] hover:bg-gray-800 disabled:opacity-50 text-white font-bold text-[10px] py-1 px-2.5 rounded transition-all shadow-sm"
+                                    >
+                                      Regenerate AI Variants
+                                    </button>
+                                  </div>
                                 )}
                               </div>
+
+                              {/* Glowing Notification Alert Overlays */}
+                              {ruleNotification && ruleNotification.campaignId === campaign.id && (
+                                <div className={`p-3.5 rounded-xl border flex gap-3 items-center justify-between shadow-lg animate-fadeIn ${
+                                  ruleNotification.type === "pause" 
+                                    ? "bg-red-500/10 border-red-500/30 text-red-800" 
+                                    : "bg-yellow-500/10 border-yellow-500/30 text-yellow-800"
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm">{ruleNotification.type === "pause" ? "🔴" : "🏆"}</span>
+                                    <p className="text-[11px] font-bold leading-normal">{ruleNotification.message}</p>
+                                  </div>
+                                  <button 
+                                    onClick={() => setRuleNotification(null)}
+                                    className="text-[10px] font-bold hover:underline shrink-0"
+                                  >
+                                    Dismiss
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Collapsible Rules Settings Panel */}
+                              {showRuleBuilder === campaign.id && (
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-4 space-y-4 shadow-sm animate-fadeIn">
+                                  <div className="flex justify-between items-center border-b pb-2">
+                                    <h5 className="font-bold text-xs text-[#2e3e48] uppercase tracking-wider flex items-center gap-1.5">
+                                      <FiSettings className="text-gray-400" />
+                                      Automated Rule Configuration &amp; Guardrails
+                                    </h5>
+                                    <span className="text-[10px] bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm">
+                                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-ping"></span>
+                                      Guardrails Active
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    
+                                    {/* Column 1: Underperformance Guardrail */}
+                                    <div className="bg-white p-3 rounded-lg border border-gray-100 space-y-3 shadow-inner">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                          <FiAlertTriangle className="text-red-500 text-sm" />
+                                          ROAS Auto-Pause Guardrail
+                                        </span>
+                                        <input
+                                          type="checkbox"
+                                          checked={activeRules[campaign.id]?.roasGuardrailEnabled || false}
+                                          onChange={(e) => handleSaveRulesConfig(campaign.id, {
+                                            ...activeRules[campaign.id],
+                                            roasGuardrailEnabled: e.target.checked
+                                          })}
+                                          className="w-4 h-4 accent-[#2e3e48] cursor-pointer"
+                                        />
+                                      </div>
+                                      <p className="text-[10px] text-gray-400">Automatically pause variations when their return on ad spend drops below limits.</p>
+                                      
+                                      {activeRules[campaign.id]?.roasGuardrailEnabled && (
+                                        <div className="space-y-3 pt-2 border-t border-gray-50 animate-fadeIn">
+                                          
+                                          {/* Slider 1: Min ROAS */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px]">
+                                              <span className="text-gray-500">Minimum ROAS Boundary</span>
+                                              <span className="font-bold text-[#2e3e48] font-mono">{activeRules[campaign.id]?.roasMinLimit.toFixed(1)}x</span>
+                                            </div>
+                                            <input
+                                              type="range"
+                                              min={1.0}
+                                              max={3.0}
+                                              step={0.1}
+                                              value={activeRules[campaign.id]?.roasMinLimit || 1.5}
+                                              onChange={(e) => setActiveRules(prev => ({
+                                                ...prev,
+                                                [campaign.id]: { ...prev[campaign.id], roasMinLimit: Number(e.target.value) }
+                                              }))}
+                                              onMouseUp={(e: any) => handleSaveRulesConfig(campaign.id, {
+                                                ...activeRules[campaign.id],
+                                                roasMinLimit: Number(e.target.value)
+                                              })}
+                                              className="w-full h-1 bg-gray-100 rounded accent-[#2e3e48]"
+                                            />
+                                          </div>
+
+                                          {/* Slider 2: Spend Threshold */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px]">
+                                              <span className="text-gray-500">Spend Threshold Needed</span>
+                                              <span className="font-bold text-[#2e3e48] font-mono">${activeRules[campaign.id]?.roasSpendThreshold}</span>
+                                            </div>
+                                            <input
+                                              type="range"
+                                              min={25}
+                                              max={500}
+                                              step={25}
+                                              value={activeRules[campaign.id]?.roasSpendThreshold || 100}
+                                              onChange={(e) => setActiveRules(prev => ({
+                                                ...prev,
+                                                [campaign.id]: { ...prev[campaign.id], roasSpendThreshold: Number(e.target.value) }
+                                              }))}
+                                              onMouseUp={(e: any) => handleSaveRulesConfig(campaign.id, {
+                                                ...activeRules[campaign.id],
+                                                roasSpendThreshold: Number(e.target.value)
+                                              })}
+                                              className="w-full h-1 bg-gray-100 rounded accent-[#2e3e48]"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Column 2: Winner Auto-Trigger */}
+                                    <div className="bg-white p-3 rounded-lg border border-gray-100 space-y-3 shadow-inner">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                          <FiTrendingUp className="text-green-600 text-sm" />
+                                          Winner Auto-Promotion
+                                        </span>
+                                        <input
+                                          type="checkbox"
+                                          checked={activeRules[campaign.id]?.winnerAutoEnabled || false}
+                                          onChange={(e) => handleSaveRulesConfig(campaign.id, {
+                                            ...activeRules[campaign.id],
+                                            winnerAutoEnabled: e.target.checked
+                                          })}
+                                          className="w-4 h-4 accent-[#2e3e48] cursor-pointer"
+                                        />
+                                      </div>
+                                      <p className="text-[10px] text-gray-400">Auto-promote and set variant as winner when it outperforms others by a set margin.</p>
+                                      
+                                      {activeRules[campaign.id]?.winnerAutoEnabled && (
+                                        <div className="space-y-3 pt-2 border-t border-gray-50 animate-fadeIn">
+                                          
+                                          {/* Slider 1: Uplift margin */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px]">
+                                              <span className="text-gray-500">Winner ROAS Uplift Margin</span>
+                                              <span className="font-bold text-[#2e3e48] font-mono">{activeRules[campaign.id]?.winnerMinRoasUplift}%</span>
+                                            </div>
+                                            <input
+                                              type="range"
+                                              min={10}
+                                              max={50}
+                                              step={5}
+                                              value={activeRules[campaign.id]?.winnerMinRoasUplift || 25}
+                                              onChange={(e) => setActiveRules(prev => ({
+                                                ...prev,
+                                                [campaign.id]: { ...prev[campaign.id], winnerMinRoasUplift: Number(e.target.value) }
+                                              }))}
+                                              onMouseUp={(e: any) => handleSaveRulesConfig(campaign.id, {
+                                                ...activeRules[campaign.id],
+                                                winnerMinRoasUplift: Number(e.target.value)
+                                              })}
+                                              className="w-full h-1 bg-gray-100 rounded accent-[#2e3e48]"
+                                            />
+                                          </div>
+
+                                          {/* Slider 2: Clicks Needed */}
+                                          <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px]">
+                                              <span className="text-gray-500">Minimum Clicks Required</span>
+                                              <span className="font-bold text-[#2e3e48] font-mono">{activeRules[campaign.id]?.winnerClickThreshold} clicks</span>
+                                            </div>
+                                            <input
+                                              type="range"
+                                              min={50}
+                                              max={500}
+                                              step={25}
+                                              value={activeRules[campaign.id]?.winnerClickThreshold || 200}
+                                              onChange={(e) => setActiveRules(prev => ({
+                                                ...prev,
+                                                [campaign.id]: { ...prev[campaign.id], winnerClickThreshold: Number(e.target.value) }
+                                              }))}
+                                              onMouseUp={(e: any) => handleSaveRulesConfig(campaign.id, {
+                                                ...activeRules[campaign.id],
+                                                winnerClickThreshold: Number(e.target.value)
+                                              })}
+                                              className="w-full h-1 bg-gray-100 rounded accent-[#2e3e48]"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                  </div>
+
+                                  {/* Rule Evaluation Logs Audit Trail */}
+                                  <div className="bg-gray-900 text-gray-300 rounded-lg p-3 border border-white/5 space-y-1.5 max-h-[130px] overflow-y-auto font-mono text-[9px] no-scrollbar">
+                                    <div className="flex items-center gap-1.5 border-b border-white/5 pb-1 mb-1 text-gray-400 font-bold justify-between">
+                                      <span className="flex items-center gap-1 uppercase tracking-wider text-[8px] flex-row">
+                                        <FiList className="text-[10px] inline-block mr-1" />
+                                        Automation Rule Engine Activity Logs
+                                      </span>
+                                      <span className="text-[7px] text-[#CAF389]">ACTIVE POLLING</span>
+                                    </div>
+                                    {(!ruleLogs[campaign.id] || ruleLogs[campaign.id].length === 0) ? (
+                                      <p className="text-gray-500 italic">Evaluating metrics... awaiting rules scan.</p>
+                                    ) : (
+                                      ruleLogs[campaign.id].map((log, lidx) => (
+                                        <div key={lidx} className="flex gap-2">
+                                          <span className="text-gray-500 shrink-0">[{log.timestamp}]</span>
+                                          <span className={`${
+                                            log.type === "success" ? "text-emerald-400 font-semibold" :
+                                            log.type === "warning" ? "text-amber-400 font-semibold" :
+                                            log.type === "error" ? "text-red-400 font-semibold" :
+                                            "text-gray-300"
+                                          }`}>
+                                            {log.message}
+                                          </span>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+
+                                </div>
+                              )}
 
                               {/* Smart marketer recommendation banner */}
                               {(() => {

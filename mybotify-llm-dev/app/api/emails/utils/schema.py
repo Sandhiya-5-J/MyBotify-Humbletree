@@ -16,3 +16,10 @@ class EmailTemplate(BaseModel):
 
 class EmailSequenceResponse(BaseModel):
     emails: List[EmailTemplate]
+
+class SendTestEmailRequest(BaseModel):
+    to_email: str
+    subject: str
+    body: str
+    call_to_action: str
+

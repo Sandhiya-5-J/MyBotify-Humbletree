@@ -66,11 +66,23 @@ async def _get_app():
         api_key=CONFIG.API_KEY,
     )
 
-    _embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=CONFIG.EMBEDDING_API_KEY or CONFIG.API_KEY)
+    try:
+        _embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=CONFIG.EMBEDDING_API_KEY or CONFIG.API_KEY)
+        _vector_store = InMemoryVectorStore(_embeddings)
+        faq_docs = _load_faqs_json()
+        _vector_store.add_documents(faq_docs)
+    except Exception as e:
+        print(f"[WARNING] Google Embeddings initialization failed (API Key likely expired/invalid): {e}")
+        print("Falling back to local resilient mock embeddings to prevent server crash.")
+        from langchain_core.embeddings import Embeddings
+        class ResilientFakeEmbeddings(Embeddings):
+            def embed_documents(self, texts: list[str]) -> list[list[float]]:
+                return [[0.0] * 768 for _ in texts]
+            def embed_query(self, text: str) -> list[float]:
+                return [0.0] * 768
+        _embeddings = ResilientFakeEmbeddings()
+        _vector_store = InMemoryVectorStore(_embeddings)
 
-    _vector_store = InMemoryVectorStore(_embeddings)
-    faq_docs = _load_faqs_json()
-    _vector_store.add_documents(faq_docs)
 
     # Agents list
     members = ["Researcher", "Content", "Ads", "Analytics", "Account"]

@@ -93,7 +93,7 @@ export default function SignUp() {
       name: value.name,
       email: value.email,
       password: value.password,
-      phone_number: value.phoneNumber ? parseInt(value.phoneNumber, 10) : undefined,
+      phone_number: value.phoneNumber || undefined,
     };
 
     try {

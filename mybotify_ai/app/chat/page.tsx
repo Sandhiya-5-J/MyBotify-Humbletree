@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { sendMessageToBot } from "@/api/chat";
+import { sendMessageToBotStream } from "@/api/chat_stream";
 import { isAuthenticated, setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import ChatMessages from "@/components/chat/chatMessage";
@@ -49,9 +50,9 @@ const SUGGESTION_CHIPS = [
 const ChatPage = () => {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>(
-    []
-  );
+  const [messages, setMessages] = useState<
+    { text: string; isUser: boolean; steps?: { agent: string; content: string }[] }[]
+  >([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -116,35 +117,110 @@ const ChatPage = () => {
     if (!text) setMessage("");
     setShowWelcome(false);
 
+    // Add user message to screen
     setMessages((prev) => [{ text: userText, isUser: true }, ...prev]);
-    setMessages((prev) => [{ text: "Loading...", isUser: false }, ...prev]);
+    // Add bot loading message
+    setMessages((prev) => [{ text: "Loading...", isUser: false, steps: [] }, ...prev]);
 
     try {
-      const conversationId = Cookies.get("conversation_id");
+      const conversationId = Cookies.get("conversation_id") || "";
+      
+      let botResponse = "";
+      const intermediateSteps: { agent: string; content: string }[] = [];
 
-      const response = await sendMessageToBot(
+      await sendMessageToBotStream(
         userText,
-        conversationId ?? ""
-      );
+        conversationId,
+        undefined, // storeId
+        undefined, // isAdmin
+        {
+          onChunk: (chunk) => {
+            // Check if chunk is an agent step: e.g. [Researcher]: content
+            const match = chunk.match(/^\[(\w+)\]:\s*([\s\S]*)/);
+            if (match) {
+              const agentName = match[1];
+              const content = match[2];
 
-      let botResponse = response?.message || "No response";
+              const existingStepIdx = intermediateSteps.findIndex((s) => s.agent === agentName);
+              if (existingStepIdx !== -1) {
+                intermediateSteps[existingStepIdx].content += content;
+              } else {
+                intermediateSteps.push({ agent: agentName, content: content });
+              }
 
-      if (botResponse.includes("Access token: ")) {
-        const tokenSplit = botResponse.split("Access token: ");
-        const token = tokenSplit[1]?.replace("✅", "")?.trim();
-        if (token) {
-          setToken(token);
-          setIsLoggedIn(true);
+              // Update active message in screen state
+              setMessages((prev) => {
+                const copy = [...prev];
+                if (copy[0] && !copy[0].isUser) {
+                  copy[0] = {
+                    ...copy[0],
+                    steps: [...intermediateSteps],
+                  };
+                }
+                return copy;
+              });
+            } else {
+              // It's the final synthesized response chunk!
+              botResponse += chunk;
+
+              let displayResponse = botResponse;
+              let isTokenUpdate = false;
+              let updatedToken = "";
+
+              if (displayResponse.includes("Access token: ")) {
+                const tokenSplit = displayResponse.split("Access token: ");
+                const token = tokenSplit[1]?.replace("✅", "")?.trim();
+                if (token) {
+                  updatedToken = token;
+                  isTokenUpdate = true;
+                }
+                displayResponse = tokenSplit[0].trim() + " [DASHBOARD_BUTTON]";
+              }
+
+              if (isTokenUpdate && updatedToken) {
+                setToken(updatedToken);
+                setIsLoggedIn(true);
+              }
+
+              setMessages((prev) => {
+                const copy = [...prev];
+                if (copy[0] && !copy[0].isUser) {
+                  copy[0] = {
+                    ...copy[0],
+                    text: displayResponse,
+                    steps: [...intermediateSteps],
+                  };
+                }
+                return copy;
+              });
+            }
+          },
+          onConversationId: (id) => {
+            Cookies.set("conversation_id", id);
+          },
+          onDone: () => {
+            setMessages((prev) => {
+              const copy = [...prev];
+              if (copy[0] && !copy[0].isUser && copy[0].text === "Loading...") {
+                copy[0].text = "I have processed your request.";
+              }
+              return copy;
+            });
+          },
+          onError: (err) => {
+            console.error("SSE Stream Error:", err);
+            setMessages((prev) => {
+              const copy = [...prev];
+              if (copy[0] && !copy[0].isUser) {
+                copy[0].text = "Sorry, I'm having trouble connecting right now. Please try again in a moment.";
+              }
+              return copy;
+            });
+          },
         }
-        botResponse = tokenSplit[0].trim() + " [DASHBOARD_BUTTON]";
-      }
-
-      setCookies(response?.cookies);
-      setMessages((prev) => [
-        { text: botResponse, isUser: false },
-        ...prev.filter((msg) => msg.text !== "Loading..."),
-      ]);
+      );
     } catch (error) {
+      console.error(error);
       setMessages((prev) => [
         { text: "Please try again.", isUser: false },
         ...prev.filter((msg) => msg.text !== "Loading..."),

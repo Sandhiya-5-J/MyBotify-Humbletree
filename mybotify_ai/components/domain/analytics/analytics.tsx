@@ -13,6 +13,8 @@ import CampaignPerformance from "./CampaignPerformance";
 import PlatformPieChart from "./PlatformPieChart";
 import RecentOrders from "./RecentOrders";
 import PredictiveInsights from "./PredictiveInsights";
+import PlatformHeatmap from "./PlatformHeatmap";
+import LiveEventConsole from "./LiveEventConsole";
 import { getMyStores, getStoreAnalytics, getStoreOrders, getStorePrediction } from "@/api/store";
 import { getStoreCampaigns } from "@/api/campaign";
 
@@ -179,6 +181,9 @@ export default function AnalyticsDashboard() {
                 {/* Revenue Chart — full width */}
                 <RevenueChart monthlyRevenue={analytics?.sales_analysis?.monthly_revenue} />
 
+                {/* Platform Performance Heatmap Grid */}
+                <PlatformHeatmap />
+
                 {/* Campaign Performance + Platform Pie — side by side */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
                   <div className="lg:col-span-3">
@@ -191,6 +196,9 @@ export default function AnalyticsDashboard() {
 
                 {/* Recent Orders */}
                 <RecentOrders orders={orders} />
+
+                {/* Live Store Operations Console */}
+                <LiveEventConsole />
               </div>
             )}
           </div>
